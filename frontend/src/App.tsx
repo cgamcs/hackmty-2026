@@ -7,12 +7,12 @@ import { useSession } from '@/store/session';
 import Inicio from '@/pages/Inicio';
 import Login from '@/pages/Login';
 import MiNegocio from '@/pages/MiNegocio';
-import Pending from '@/pages/Pending';
 import Prediccion from '@/pages/Prediccion';
 import StressLab from '@/pages/StressLab';
 import Recovery from '@/pages/Recovery';
 import Funding from '@/pages/Funding';
 import CfdiConfig from '@/pages/CfdiConfig';
+import Ajustes from '@/pages/Ajustes';
 
 /** Rehydrate the store from the session cookie on load.
  *
@@ -47,7 +47,7 @@ export default function App() {
           <Route path="/recovery" element={<Recovery />} />
           <Route path="/funding" element={<Funding />} />
           <Route path="/settings/cfdi" element={<CfdiConfig />} />
-          <Route path="/settings" element={<Pending view="settings" />} />
+          <Route path="/settings" element={<Ajustes />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

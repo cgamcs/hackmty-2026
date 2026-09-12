@@ -199,8 +199,61 @@ def connect_account(payload: dict, tenant_id: str = Depends(require_tenant)):
             update tenants set account_id = %s, account_number_last4 = %s where id = %s
         """, (match["_id"], number[-4:], tenant_id))
 
-    return {"nickname": match.get("nickname"), "balance": match.get("balance"),
-            "last4": number[-4:]}
+    return {"account_id": match["_id"], "nickname": match.get("nickname"),
+            "balance": match.get("balance"), "last4": number[-4:]}
+
+
+@app.get("/api/setup/status")
+def setup_status(tenant_id: str = Depends(require_tenant)):
+    """What the tenant still has to provide before any figure can be shown.
+
+    The server decides this, not the UI. If the front end inferred completeness from
+    whatever it happened to have fetched, a half-configured tenant would render a
+    confident-looking dashboard built on missing inputs.
+    """
+    with tenant_tx(tenant_id) as conn:
+        row = fetch_one(conn, """
+            select
+              t.razon_social, t.rfc, t.account_id, t.account_number_last4,
+              (select count(*) from invoices  i where i.tenant_id = t.id) as cfdi_count,
+              (select count(*) from obligations o where o.tenant_id = t.id) as obligation_count,
+              (select count(*) from cash_flows f where f.tenant_id = t.id) as flow_count,
+              (select count(*) from invoices i
+                 where i.tenant_id = t.id and i.direction = 'issued'
+                   and i.metodo_pago = 'PPD' and i.settled_at is null) as open_receivables
+            from tenants t where t.id = %s
+        """, (tenant_id,))
+
+    steps = {
+        "razon_social": bool((row["razon_social"] or "").strip()),
+        "account": bool(row["account_id"]),
+        "cfdi": row["cfdi_count"] > 0,
+        "obligations": row["obligation_count"] > 0,
+        "synced": row["flow_count"] > 0,
+    }
+    return {
+        "steps": steps,
+        "complete": all(steps.values()),
+        "razon_social": row["razon_social"],
+        "rfc": row["rfc"],
+        # The front end addresses /api/sme/{account_id}, so it has to learn the id the
+        # server resolved — it never sees the account list to pick from.
+        "account_id": row["account_id"],
+        "account_last4": row["account_number_last4"],
+        "counts": {"cfdi": row["cfdi_count"], "obligations": row["obligation_count"],
+                   "flows": row["flow_count"], "open_receivables": row["open_receivables"]},
+    }
+
+
+@app.post("/api/profile")
+def update_profile(payload: dict, tenant_id: str = Depends(require_tenant)):
+    razon_social = (payload.get("razon_social") or "").strip()
+    if not razon_social:
+        raise HTTPException(400, "La razón social es requerida.")
+    with tenant_tx(tenant_id) as conn:
+        execute(conn, "update tenants set razon_social = %s where id = %s",
+                (razon_social, tenant_id))
+    return {"razon_social": razon_social}
 
 
 @app.post("/api/cfdi/upload")
@@ -332,10 +385,37 @@ def _resolve_tenant(account_id: str, session_tenant: str | None) -> str:
     return str(row["id"])
 
 
+def _require_complete_setup(tenant_id: str) -> None:
+    """404 until every input exists.
+
+    A dashboard rendered on partial inputs is worse than no dashboard: the figures look
+    authoritative while resting on data the tenant never supplied. The front end treats
+    404 as its first-run gate, so this routes them to finish setup instead.
+    """
+    with tenant_tx(tenant_id) as conn:
+        row = fetch_one(conn, """
+            select t.razon_social, t.account_id,
+              (select count(*) from invoices i where i.tenant_id = t.id) as cfdi,
+              (select count(*) from obligations o where o.tenant_id = t.id) as obligations,
+              (select count(*) from cash_flows f where f.tenant_id = t.id) as flows
+            from tenants t where t.id = %s
+        """, (tenant_id,))
+    missing = [name for name, ok in (
+        ("razon_social", bool((row["razon_social"] or "").strip())),
+        ("account", bool(row["account_id"])),
+        ("cfdi", row["cfdi"] > 0),
+        ("obligations", row["obligations"] > 0),
+        ("sync", row["flows"] > 0),
+    ) if not ok]
+    if missing:
+        raise HTTPException(404, f"Integración incompleta: falta {', '.join(missing)}.")
+
+
 @app.get("/api/sme/{account_id}")
 def sme_dashboard(account_id: str,
                   session_tenant: str | None = Depends(current_tenant_id)):
     tenant_id = _resolve_tenant(account_id, session_tenant)
+    _require_complete_setup(tenant_id)
     api = Nessie()
 
     account = api.account(account_id)
