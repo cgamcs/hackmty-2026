@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="P" Folio="9015" Fecha="2026-09-04T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="8174.14" Moneda="MXN" Total="9482.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="37000">
+  <cfdi:Emisor Rfc="AML960815W22" Nombre="Abastos Mayoreo Leon" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="ALE240517H23" Nombre="Abarrotes La Esperanza" DomicilioFiscalReceptor="37000" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Resurtido abarrotes" ValorUnitario="8174.14" Importe="8174.14" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="8174.14" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1307.86"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="1307.86">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="8174.14" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1307.86"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="5F6A2DC3-ECB4-47AA-9662-1B6D09A6C649" FechaTimbrado="2026-09-04T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

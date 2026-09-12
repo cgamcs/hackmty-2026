@@ -96,7 +96,10 @@ SCENARIOS = [
             Bill("Internet Totalplay", 800, 5, "utility"),
         ],
         receivables=[
-            Receivable("Cocina Economica Doña Mari", "CEM180322K51", 12_400, 40, 28),
+            # One recurring business client; enough history to learn its ~28-day habit.
+            Receivable("Cocina Economica Doña Mari", "CEM180322K51", 11_800, 75, 26),
+            Receivable("Cocina Economica Doña Mari", "CEM180322K51", 12_400, 58, 30),
+            Receivable("Cocina Economica Doña Mari", "CEM180322K51", 12_900, 40, 28),
             Receivable("Cocina Economica Doña Mari", "CEM180322K51", 13_100, 10, None),
         ],
         expected_verdict="none",
@@ -129,13 +132,29 @@ SCENARIOS = [
             Bill("CFE Energia", 6_000, 10, "utility"),
         ],
         receivables=[
-            # Issued on net-30 terms; the open ones land days 18-27 of the horizon.
-            Receivable("Tiendas Del Valle SA", "TDV150612J88", 58_000, 45, 30),
-            Receivable("Super Mercados Norte", "SMN160228R44", 52_000, 38, 29),
-            Receivable("Tiendas Del Valle SA", "TDV150612J88", 61_000, 12, None),
-            Receivable("Super Mercados Norte", "SMN160228R44", 47_500, 9, None),
-            Receivable("Autoservicio La Central", "ALC170914B29", 55_000, 6, None),
-            Receivable("Tiendas Del Valle SA", "TDV150612J88", 49_000, 3, None),
+            # Three clients with deliberately different payment behaviour, so the
+            # engine can LEARN terms per counterparty instead of assuming one number.
+            # Tiendas Del Valle — fast and reliable, ~15 days.
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 44_000, 100, 15),
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 51_500, 80, 14),
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 47_200, 60, 16),
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 58_000, 42, 15),
+            # Super Mercados Norte — consistently slow, ~45 days.
+            Receivable("Super Mercados Norte", "SMN160228R44", 52_000, 110, 44),
+            Receivable("Super Mercados Norte", "SMN160228R44", 49_800, 88, 46),
+            Receivable("Super Mercados Norte", "SMN160228R44", 55_300, 66, 45),
+            # Autoservicio La Central — erratic. Median lands near 38 but the spread is
+            # wide, so rung 1 must not treat its landing date as dependable.
+            Receivable("Autoservicio La Central", "ALC170914B29", 41_000, 105, 22),
+            Receivable("Autoservicio La Central", "ALC170914B29", 46_500, 85, 38),
+            Receivable("Autoservicio La Central", "ALC170914B29", 39_700, 64, 52),
+            # Open invoices. Under the assumed 30-day default these land on days 22, 28,
+            # 12 and 16; under learned terms they land on 7, 13, 27 and 24 instead —
+            # the same money, a materially different timeline.
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 61_000, 8, None),
+            Receivable("Tiendas Del Valle SA", "TDV150612J88", 49_000, 2, None),
+            Receivable("Super Mercados Norte", "SMN160228R44", 47_500, 18, None),
+            Receivable("Autoservicio La Central", "ALC170914B29", 55_000, 14, None),
         ],
         expected_verdict="timing",
     ),

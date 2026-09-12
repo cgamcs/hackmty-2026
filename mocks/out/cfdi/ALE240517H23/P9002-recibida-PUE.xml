@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="P" Folio="9002" Fecha="2026-08-22T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="12827.59" Moneda="MXN" Total="14880.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="37000">
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="P" Folio="9002" Fecha="2026-09-03T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="3229.31" Moneda="MXN" Total="3746.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="37000">
   <cfdi:Emisor Rfc="DBB980412T15" Nombre="Distribuidora Bimbo del Bajio" RegimenFiscal="601"/>
   <cfdi:Receptor Rfc="ALE240517H23" Nombre="Abarrotes La Esperanza" DomicilioFiscalReceptor="37000" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
   <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Resurtido abarrotes" ValorUnitario="12827.59" Importe="12827.59" ObjetoImp="02">
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Resurtido abarrotes" ValorUnitario="3229.31" Importe="3229.31" ObjetoImp="02">
       <cfdi:Impuestos>
         <cfdi:Traslados>
-          <cfdi:Traslado Base="12827.59" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2052.41"/>
+          <cfdi:Traslado Base="3229.31" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="516.69"/>
         </cfdi:Traslados>
       </cfdi:Impuestos>
     </cfdi:Concepto>
   </cfdi:Conceptos>
-  <cfdi:Impuestos TotalImpuestosTrasladados="2052.41">
+  <cfdi:Impuestos TotalImpuestosTrasladados="516.69">
     <cfdi:Traslados>
-      <cfdi:Traslado Base="12827.59" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2052.41"/>
+      <cfdi:Traslado Base="3229.31" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="516.69"/>
     </cfdi:Traslados>
   </cfdi:Impuestos>
   <cfdi:Complemento>
-    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="D1266FD3-4FA5-44F2-9975-93F953C96167" FechaTimbrado="2026-08-22T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="62AF83FA-BBF6-4675-92DE-50B8BF5ECB4C" FechaTimbrado="2026-09-03T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
   </cfdi:Complemento>
 </cfdi:Comprobante>

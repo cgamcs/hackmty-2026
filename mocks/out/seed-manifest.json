@@ -45,19 +45,35 @@
         "kind": "utility"
       }
     ],
-    "flows_seeded": 370,
+    "flows_seeded": 373,
     "flow_errors": 0,
     "receivables": [
       {
         "folio": "A4001",
         "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 11800,
+        "issued": "2026-06-29",
+        "settled": "2026-07-25",
+        "open": false
+      },
+      {
+        "folio": "A4002",
+        "client": "Cocina Economica Do\u00f1a Mari",
         "amount": 12400,
+        "issued": "2026-07-16",
+        "settled": "2026-08-15",
+        "open": false
+      },
+      {
+        "folio": "A4003",
+        "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 12900,
         "issued": "2026-08-03",
         "settled": "2026-08-31",
         "open": false
       },
       {
-        "folio": "A4002",
+        "folio": "A4004",
         "client": "Cocina Economica Do\u00f1a Mari",
         "amount": 13100,
         "issued": "2026-09-02",
@@ -68,10 +84,10 @@
     "expected_verdict": "none",
     "projection": {
       "balance": 180000,
-      "inflow_per_day": 9261,
+      "inflow_per_day": 9466,
       "outflow_per_day": 5875,
-      "net_30d": 46401,
-      "min_balance": 168157,
+      "net_30d": 52576,
+      "min_balance": 168774,
       "breach": null,
       "verdict": "none",
       "expected_collections": 11135,
@@ -117,54 +133,118 @@
         "kind": "utility"
       }
     ],
-    "flows_seeded": 297,
+    "flows_seeded": 307,
     "flow_errors": 0,
     "receivables": [
       {
         "folio": "A4001",
         "client": "Tiendas Del Valle SA",
-        "amount": 58000,
-        "issued": "2026-07-29",
-        "settled": "2026-08-28",
+        "amount": 44000,
+        "issued": "2026-06-04",
+        "settled": "2026-06-19",
         "open": false
       },
       {
         "folio": "A4002",
-        "client": "Super Mercados Norte",
-        "amount": 52000,
-        "issued": "2026-08-05",
-        "settled": "2026-09-03",
+        "client": "Tiendas Del Valle SA",
+        "amount": 51500,
+        "issued": "2026-06-24",
+        "settled": "2026-07-08",
         "open": false
       },
       {
         "folio": "A4003",
         "client": "Tiendas Del Valle SA",
-        "amount": 61000,
-        "issued": "2026-08-31",
-        "settled": null,
-        "open": true
+        "amount": 47200,
+        "issued": "2026-07-14",
+        "settled": "2026-07-30",
+        "open": false
       },
       {
         "folio": "A4004",
-        "client": "Super Mercados Norte",
-        "amount": 47500,
-        "issued": "2026-09-03",
-        "settled": null,
-        "open": true
+        "client": "Tiendas Del Valle SA",
+        "amount": 58000,
+        "issued": "2026-08-01",
+        "settled": "2026-08-16",
+        "open": false
       },
       {
         "folio": "A4005",
+        "client": "Super Mercados Norte",
+        "amount": 52000,
+        "issued": "2026-05-25",
+        "settled": "2026-07-08",
+        "open": false
+      },
+      {
+        "folio": "A4006",
+        "client": "Super Mercados Norte",
+        "amount": 49800,
+        "issued": "2026-06-16",
+        "settled": "2026-08-01",
+        "open": false
+      },
+      {
+        "folio": "A4007",
+        "client": "Super Mercados Norte",
+        "amount": 55300,
+        "issued": "2026-07-08",
+        "settled": "2026-08-22",
+        "open": false
+      },
+      {
+        "folio": "A4008",
         "client": "Autoservicio La Central",
-        "amount": 55000,
-        "issued": "2026-09-06",
+        "amount": 41000,
+        "issued": "2026-05-30",
+        "settled": "2026-06-21",
+        "open": false
+      },
+      {
+        "folio": "A4009",
+        "client": "Autoservicio La Central",
+        "amount": 46500,
+        "issued": "2026-06-19",
+        "settled": "2026-07-27",
+        "open": false
+      },
+      {
+        "folio": "A4010",
+        "client": "Autoservicio La Central",
+        "amount": 39700,
+        "issued": "2026-07-10",
+        "settled": "2026-08-31",
+        "open": false
+      },
+      {
+        "folio": "A4011",
+        "client": "Tiendas Del Valle SA",
+        "amount": 61000,
+        "issued": "2026-09-04",
         "settled": null,
         "open": true
       },
       {
-        "folio": "A4006",
+        "folio": "A4012",
         "client": "Tiendas Del Valle SA",
         "amount": 49000,
-        "issued": "2026-09-09",
+        "issued": "2026-09-10",
+        "settled": null,
+        "open": true
+      },
+      {
+        "folio": "A4013",
+        "client": "Super Mercados Norte",
+        "amount": 47500,
+        "issued": "2026-08-25",
+        "settled": null,
+        "open": true
+      },
+      {
+        "folio": "A4014",
+        "client": "Autoservicio La Central",
+        "amount": 55000,
+        "issued": "2026-08-29",
         "settled": null,
         "open": true
       }
@@ -172,13 +252,13 @@
     "expected_verdict": "timing",
     "projection": {
       "balance": 38000,
-      "inflow_per_day": 3739,
+      "inflow_per_day": 6864,
       "outflow_per_day": 1731,
-      "net_30d": 50880,
-      "min_balance": -55988,
+      "net_30d": 144630,
+      "min_balance": -24600,
       "breach": {
         "date": "2026-09-15",
-        "shortfall": 33974,
+        "shortfall": 24600,
         "obligation": "Nomina Operativa Quincenal"
       },
       "verdict": "timing",
