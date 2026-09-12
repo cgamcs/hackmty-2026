@@ -1,0 +1,2835 @@
+openapi: 3.0.3
+info:
+  title: Nessie API
+  description: A comprehensive banking API for managing customers, accounts, transactions, and financial operations
+  version: 1.0.0
+  contact:
+    name: Nessie API Support
+    url: https://nessieisreal.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+  - url: https://qa-api.nessieisreal.com
+    description: QA server
+  - url: https://prod-api.nessieisreal.com
+    description: Production server
+  - url: https://sopko4r0aj.execute-api.us-east-1.amazonaws.com/qa
+    description: Direct QA server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /customers:
+    get:
+      tags:
+        - Customers
+      summary: Get all customers
+      description: Retrieve all customers for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Customers
+      summary: Create a new customer
+      description: Create a new customer for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Customer created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /customers/{id}:
+    get:
+      tags:
+        - Customers
+      summary: Get customer by ID
+      description: Retrieve a specific customer by their ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      description: Update an existing customer's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '202':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted customer update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /customers/{id}/accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Get accounts for customer
+      description: Retrieve all accounts for a specific customer
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      responses:
+        '200':
+          description: List of customer accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Accounts
+      summary: Create account for customer
+      description: Create a new account for a specific customer
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreate'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Account created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /customers/{id}/bills:
+    get:
+      tags:
+        - Bills
+      summary: Get bills for customer
+      description: Retrieve all bills for a specific customer
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      responses:
+        '200':
+          description: List of customer bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: Get all accounts
+      description: Retrieve all accounts for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: Get account by ID
+      description: Retrieve a specific account by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Accounts
+      summary: Update account
+      description: Update an existing account's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdate'
+      responses:
+        '202':
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted account update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Accounts
+      summary: Delete account
+      description: Delete an existing account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: Account deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}/customer:
+    get:
+      tags:
+        - Customers
+      summary: Get customer for account
+      description: Get the customer information that owns the specified account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: Customer information
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Customer on account!"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}/bills:
+    get:
+      tags:
+        - Bills
+      summary: Get bills for account
+      description: Retrieve all bills for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: List of account bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Bills
+      summary: Create bill for account
+      description: Create a new bill for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillCreate'
+      responses:
+        '201':
+          description: Bill created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Bill created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}/deposits:
+    get:
+      tags:
+        - Deposits
+      summary: Get deposits for account
+      description: Retrieve all deposits for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: List of account deposits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deposit'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Deposits
+      summary: Create deposit for account
+      description: Create a new deposit for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositCreate'
+      responses:
+        '201':
+          description: Deposit created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Deposit created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}/loans:
+    get:
+      tags:
+        - Loans
+      summary: Get loans for account
+      description: Retrieve all loans for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: List of account loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Loan'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Loans
+      summary: Create loan for account
+      description: Create a new loan for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanCreate'
+      responses:
+        '201':
+          description: Loan created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Loan created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /bills/{billId}:
+    get:
+      tags:
+        - Bills
+      summary: Get bill by ID
+      description: Retrieve a specific bill by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: billId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+      responses:
+        '200':
+          description: Bill details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bill not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Bills
+      summary: Update bill
+      description: Update an existing bill's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: billId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillUpdate'
+      responses:
+        '202':
+          description: Bill updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted bill update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bill not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Bills
+      summary: Delete bill
+      description: Delete an existing bill
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: billId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Bill ID
+      responses:
+        '200':
+          description: Bill deleted successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Bill deleted"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /deposits:
+    get:
+      tags:
+        - Deposits
+      summary: Get all deposits
+      description: Retrieve all deposits for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of deposits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deposit'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /deposits/{id}:
+    get:
+      tags:
+        - Deposits
+      summary: Get deposit by ID
+      description: Retrieve a specific deposit by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deposit ID
+      responses:
+        '200':
+          description: Deposit details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Deposit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Deposits
+      summary: Update deposit
+      description: Update an existing deposit's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deposit ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositUpdate'
+      responses:
+        '202':
+          description: Deposit updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted deposit update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Deposit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Deposits
+      summary: Delete deposit
+      description: Delete an existing deposit
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deposit ID
+      responses:
+        '200':
+          description: Deposit deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /loans/{id}:
+    get:
+      tags:
+        - Loans
+      summary: Get loan by ID
+      description: Retrieve a specific loan by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Loan ID
+      responses:
+        '200':
+          description: Loan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Loan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Loans
+      summary: Update loan
+      description: Update an existing loan's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Loan ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanUpdate'
+      responses:
+        '202':
+          description: Loan updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted loan update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Loan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Loans
+      summary: Delete loan
+      description: Delete an existing loan
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Loan ID
+      responses:
+        '200':
+          description: Loan deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /merchants:
+    get:
+      tags:
+        - Merchants
+      summary: Get all merchants
+      description: Retrieve all merchants for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of merchants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Merchant'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Merchants
+      summary: Create a new merchant
+      description: Create a new merchant for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantCreate'
+      responses:
+        '201':
+          description: Merchant created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Merchant created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /merchants/{id}:
+    get:
+      tags:
+        - Merchants
+      summary: Get merchant by ID
+      description: Retrieve a specific merchant by their ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Merchant ID
+      responses:
+        '200':
+          description: Merchant details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Merchant'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Merchants
+      summary: Update merchant
+      description: Update an existing merchant's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Merchant ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantUpdate'
+      responses:
+        '202':
+          description: Merchant updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted merchant update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Merchant not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /atms:
+    get:
+      tags:
+        - ATMs
+      summary: Get all ATMs
+      description: Retrieve all ATMs for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of ATMs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ATM'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /atms/{id}:
+    get:
+      tags:
+        - ATMs
+      summary: Get ATM by ID
+      description: Retrieve a specific ATM by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ATM ID
+      responses:
+        '200':
+          description: ATM details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ATM'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: ATM not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /branches:
+    get:
+      tags:
+        - Branches
+      summary: Get all branches
+      description: Retrieve all branches for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of branches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Branch'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /branches/{id}:
+    get:
+      tags:
+        - Branches
+      summary: Get branch by ID
+      description: Retrieve a specific branch by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Branch ID
+      responses:
+        '200':
+          description: Branch details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Branch not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /enterprise/customers:
+    get:
+      tags:
+        - Enterprise
+      summary: Get all customers (Enterprise)
+      description: Retrieve all customers for enterprise operations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /enterprise/customers/{customer_id}:
+    get:
+      tags:
+        - Enterprise
+      summary: Get customer by ID (Enterprise)
+      description: Retrieve a specific customer by their ID for enterprise operations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Customer ID
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /enterprise/deposits:
+    get:
+      tags:
+        - Enterprise
+      summary: Get all deposits (Enterprise)
+      description: Retrieve all deposits for enterprise operations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+      responses:
+        '200':
+          description: List of deposits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deposit'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /enterprise/deposits/{deposit_id}:
+    get:
+      tags:
+        - Enterprise
+      summary: Get deposit by ID (Enterprise)
+      description: Retrieve a specific deposit by its ID for enterprise operations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: deposit_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deposit ID
+      responses:
+        '200':
+          description: Deposit details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        '404':
+          description: Deposit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /enterprise/withdrawal/{withdrawal_id}:
+    get:
+      tags:
+        - Enterprise
+      summary: Get withdrawal by ID (Enterprise)
+      description: Retrieve a specific withdrawal by its ID for enterprise operations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: withdrawal_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Withdrawal ID
+      responses:
+        '200':
+          description: Withdrawal details
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Withdrawal information
+        '404':
+          description: Withdrawal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /purchase/{purchase_id}:
+    get:
+      tags:
+        - Purchases
+      summary: Get purchase by ID
+      description: Retrieve a specific purchase by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: purchase_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Purchase ID
+      responses:
+        '200':
+          description: Purchase details
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Purchase information
+        '404':
+          description: Purchase not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Purchases
+      summary: Update purchase
+      description: Update an existing purchase's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: purchase_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Purchase ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Purchase update data
+      responses:
+        '202':
+          description: Purchase updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted purchase update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Purchase not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Purchases
+      summary: Delete purchase
+      description: Delete an existing purchase
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: purchase_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Purchase ID
+      responses:
+        '200':
+          description: Purchase deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /transfers/{transfer_id}:
+    get:
+      tags:
+        - Transfers
+      summary: Get transfer by ID
+      description: Retrieve a specific transfer by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: transfer_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Transfer ID
+      responses:
+        '200':
+          description: Transfer details
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Transfer information
+        '404':
+          description: Transfer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Transfers
+      summary: Update transfer
+      description: Update an existing transfer's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: transfer_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Transfer ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Transfer update data
+      responses:
+        '202':
+          description: Transfer updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted transfer update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transfer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Transfers
+      summary: Delete transfer
+      description: Delete an existing transfer
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: transfer_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Transfer ID
+      responses:
+        '200':
+          description: Transfer deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /withdrawal/{withdrawal_id}:
+    get:
+      tags:
+        - Withdrawals
+      summary: Get withdrawal by ID
+      description: Retrieve a specific withdrawal by its ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: withdrawal_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Withdrawal ID
+      responses:
+        '200':
+          description: Withdrawal details
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Withdrawal information
+        '404':
+          description: Withdrawal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    put:
+      tags:
+        - Withdrawals
+      summary: Update withdrawal
+      description: Update an existing withdrawal's information
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: withdrawal_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Withdrawal ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Withdrawal update data
+      responses:
+        '202':
+          description: Withdrawal updated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Accepted withdrawal update"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Withdrawal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    delete:
+      tags:
+        - Withdrawals
+      summary: Delete withdrawal
+      description: Delete an existing withdrawal
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: withdrawal_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Withdrawal ID
+      responses:
+        '200':
+          description: Withdrawal deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+  /accounts/{id}/withdrawals:
+    get:
+      tags:
+        - Withdrawals
+      summary: Get withdrawals for account
+      description: Retrieve all withdrawals for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      responses:
+        '200':
+          description: List of account withdrawals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Withdrawal information
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+    post:
+      tags:
+        - Withdrawals
+      summary: Create withdrawal for account
+      description: Create a new withdrawal for a specific account
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: API key for authentication
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Withdrawal creation data
+      responses:
+        '201':
+          description: Withdrawal created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Withdrawal created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "unauthorized"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: key
+      description: API key for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: string
+          description: Additional error details
+
+    Address:
+      type: object
+      properties:
+        street_number:
+          type: string
+          description: Street number
+        street_name:
+          type: string
+          description: Street name
+        city:
+          type: string
+          description: City
+        state:
+          type: string
+          description: State
+        zip:
+          type: string
+          description: ZIP code
+      required:
+        - street_number
+        - street_name
+        - city
+        - state
+        - zip
+
+    Geocode:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: float
+          description: Latitude
+        lng:
+          type: number
+          format: float
+          description: Longitude
+      required:
+        - lat
+        - lng
+
+    Customer:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Customer unique identifier
+          minLength: 24
+          maxLength: 24
+        first_name:
+          type: string
+          description: Customer's first name
+        last_name:
+          type: string
+          description: Customer's last name
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - _id
+        - first_name
+        - last_name
+        - address
+
+    CustomerCreate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: Customer's first name
+        last_name:
+          type: string
+          description: Customer's last name
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - first_name
+        - last_name
+        - address
+
+    CustomerUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: Customer's first name
+        last_name:
+          type: string
+          description: Customer's last name
+        address:
+          $ref: '#/components/schemas/Address'
+
+    AccountType:
+      type: string
+      enum: [Credit Card, Savings, Checking]
+      description: Type of account
+
+    Account:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Account unique identifier
+          minLength: 24
+          maxLength: 24
+        type:
+          $ref: '#/components/schemas/AccountType'
+        nickname:
+          type: string
+          description: Nickname associated with account
+        rewards:
+          type: integer
+          minimum: 0
+          description: Reward points associated with account
+        balance:
+          type: integer
+          minimum: 0
+          description: Balance associated with account
+        account_number:
+          type: string
+          minLength: 16
+          maxLength: 16
+          description: 16 digit Account Number that is associated with the account
+        customer_id:
+          type: string
+          description: ID of customer who owns the account
+      required:
+        - _id
+        - type
+        - nickname
+        - rewards
+        - balance
+        - account_number
+        - customer_id
+
+    AccountCreate:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/AccountType'
+        nickname:
+          type: string
+          description: Nickname associated with account
+        rewards:
+          type: integer
+          minimum: 0
+          description: Reward points associated with account
+        balance:
+          type: integer
+          minimum: 0
+          description: Balance associated with account
+      required:
+        - type
+        - nickname
+        - rewards
+        - balance
+
+    AccountUpdate:
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: Nickname associated with account
+      required:
+        - nickname
+
+    BillStatus:
+      type: string
+      enum: [pending, cancelled, completed, recurring]
+      description: Status of the bill
+
+    Bill:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Bill unique identifier
+          minLength: 24
+          maxLength: 24
+        status:
+          $ref: '#/components/schemas/BillStatus'
+        payee:
+          type: string
+          description: The entity the bill will be paid to
+        nickname:
+          type: string
+          description: A nickname for the bill to help you identify it
+        creation_date:
+          type: string
+          format: date
+          description: When the bill was created
+        payment_date:
+          type: string
+          description: Date when bill is going to be paid or was paid
+        recurring_date:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: Day of month bill will recur
+        upcoming_payment_date:
+          type: string
+          description: Next bill payment date
+        payment_amount:
+          type: number
+          format: float
+          description: Bill amount
+        account_id:
+          type: string
+          minLength: 24
+          maxLength: 24
+          description: ID of account that this bill is associated with
+      required:
+        - _id
+        - status
+        - payee
+        - nickname
+        - creation_date
+        - payment_date
+        - recurring_date
+        - upcoming_payment_date
+        - payment_amount
+        - account_id
+
+    BillCreate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/BillStatus'
+        payee:
+          type: string
+          description: The entity the bill will be paid to
+        nickname:
+          type: string
+          description: A nickname for the bill to help you identify it
+        payment_date:
+          type: string
+          description: Date when bill is going to be paid or was paid
+        recurring_date:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: Day of month bill will recur
+        payment_amount:
+          type: number
+          format: float
+          description: Bill amount
+      required:
+        - status
+        - payee
+        - payment_amount
+
+    BillUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/BillStatus'
+        payee:
+          type: string
+          description: The entity the bill will be paid to
+        nickname:
+          type: string
+          description: A nickname for the bill to help you identify it
+        payment_date:
+          type: string
+          description: Date when bill is going to be paid or was paid
+        recurring_date:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: Day of month bill will recur
+        payment_amount:
+          type: number
+          format: float
+          description: Bill amount
+
+    Merchant:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Merchant unique identifier
+          minLength: 24
+          maxLength: 24
+        name:
+          type: string
+          description: Name associated with the merchant
+        category:
+          type: string
+          description: Category associated with the merchant
+        address:
+          $ref: '#/components/schemas/Address'
+        geocode:
+          $ref: '#/components/schemas/Geocode'
+      required:
+        - _id
+        - name
+
+    MerchantCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name associated with the merchant
+        category:
+          type: string
+          description: Category associated with the merchant
+        address:
+          $ref: '#/components/schemas/Address'
+        geocode:
+          $ref: '#/components/schemas/Geocode'
+      required:
+        - name
+
+    MerchantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name associated with the merchant
+        category:
+          type: string
+          description: Category associated with the merchant
+        address:
+          $ref: '#/components/schemas/Address'
+        geocode:
+          $ref: '#/components/schemas/Geocode'
+
+    Branch:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Branch unique identifier
+          minLength: 24
+          maxLength: 24
+        name:
+          type: string
+          description: Unique nickname associated with branch
+        phone_number:
+          type: string
+          description: Phone number of the branch
+        hours:
+          type: array
+          items:
+            type: string
+          description: Hours of Operation of branch
+        notes:
+          type: array
+          items:
+            type: string
+          description: Special notes about branch
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - _id
+        - name
+        - phone_number
+        - hours
+        - notes
+        - address
+
+    Deposit:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Deposit unique identifier
+          minLength: 24
+          maxLength: 24
+        medium:
+          type: string
+          description: Medium of the deposit
+        transaction_date:
+          type: string
+          description: Date the deposit was made
+        status:
+          type: string
+          description: Status of the deposit
+        amount:
+          type: integer
+          description: Amount of the deposit
+        description:
+          type: string
+          description: Description about the deposit
+      required:
+        - _id
+        - medium
+        - transaction_date
+        - status
+        - amount
+        - description
+
+    DepositCreate:
+      type: object
+      properties:
+        medium:
+          type: string
+          description: Medium of the deposit
+        transaction_date:
+          type: string
+          description: Date the deposit was made
+        status:
+          type: string
+          description: Status of the deposit
+        amount:
+          type: integer
+          description: Amount of the deposit
+        description:
+          type: string
+          description: Description about the deposit
+      required:
+        - medium
+        - transaction_date
+        - status
+        - amount
+        - description
+
+    DepositUpdate:
+      type: object
+      properties:
+        medium:
+          type: string
+          description: Medium of the deposit
+        transaction_date:
+          type: string
+          description: Date the deposit was made
+        status:
+          type: string
+          description: Status of the deposit
+        amount:
+          type: integer
+          description: Amount of the deposit
+        description:
+          type: string
+          description: Description about the deposit
+
+    Loan:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Loan unique identifier
+          minLength: 24
+          maxLength: 24
+        type:
+          type: string
+          description: Type of the loan
+        creation_date:
+          type: string
+          format: date
+          description: Date the loan was created on
+        status:
+          type: string
+          description: Status of the loan
+        credit_score:
+          type: integer
+          description: Credit score of the borrower of the loan
+        monthly_payment:
+          type: integer
+          description: Monthly payment amount for the loan
+        amount:
+          type: integer
+          description: Amount of the loan
+        description:
+          type: string
+          description: Description about the loan
+      required:
+        - _id
+        - type
+        - creation_date
+        - status
+        - credit_score
+        - monthly_payment
+        - amount
+        - description
+
+    LoanCreate:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the loan
+        status:
+          type: string
+          description: Status of the loan
+        credit_score:
+          type: integer
+          description: Credit score of the borrower of the loan
+        monthly_payment:
+          type: integer
+          description: Monthly payment amount for the loan
+        amount:
+          type: integer
+          description: Amount of the loan
+        description:
+          type: string
+          description: Description about the loan
+      required:
+        - type
+        - status
+        - credit_score
+        - monthly_payment
+        - amount
+        - description
+
+    LoanUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the loan
+        status:
+          type: string
+          description: Status of the loan
+        credit_score:
+          type: integer
+          description: Credit score of the borrower of the loan
+        monthly_payment:
+          type: integer
+          description: Monthly payment amount for the loan
+        amount:
+          type: integer
+          description: Amount of the loan
+        description:
+          type: string
+          description: Description about the loan
+
+tags:
+  - name: Customers
+    description: Customer management operations
+  - name: Accounts
+    description: Account management operations
+  - name: ATMs
+    description: ATM location and information
+  - name: Bills
+    description: Bill payment operations
+  - name: Branches
+    description: Branch location and information
+  - name: Deposits
+    description: Deposit operations
+  - name: Loans
+    description: Loan management operations
+  - name: Merchants
+    description: Merchant information and management
+  - name: Purchases
+    description: Purchase transaction operations
+  - name: Transfers
+    description: Transfer operations
+  - name: Withdrawals
+    description: Withdrawal operations
+  - name: Data
+    description: Data management operations
+  - name: Enterprise
+    description: Enterprise-level operations
