@@ -31,7 +31,14 @@ body {
 }
 
 @layer components {
-  /* Floating rounded shell lit by a soft Dim Grey source. */
+  /* Full-screen app background — same light source as the shell, no border or shadow. */
+  .app-bg {
+    background:
+      radial-gradient(120% 90% at 78% 0%, rgba(109, 114, 117, 0.26) 0%, rgba(109, 114, 117, 0.1) 42%, rgba(12, 18, 12, 0) 72%),
+      var(--color-onyx);
+  }
+
+  /* Floating rounded shell lit by a soft Dim Grey source (used for login form card etc). */
   .shell {
     border-radius: clamp(18px, 3.5vw, 34px);
     background:
@@ -109,13 +116,89 @@ body {
   }
 }
 
+/* ── Animations ─────────────────────────────────────────────────── */
+
 @keyframes crit-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
-.crit-pulse {
-  animation: crit-pulse 1.6s ease-in-out infinite;
+.crit-pulse { animation: crit-pulse 1.6s ease-in-out infinite; }
+
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Page-level entrance — applied to <main> on every route */
+.page-enter {
+  animation: fade-slide-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger children: first 8 direct children get a small delay cascade */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 55ms; }
+.stagger > *:nth-child(3) { animation-delay: 110ms; }
+.stagger > *:nth-child(4) { animation-delay: 165ms; }
+.stagger > *:nth-child(5) { animation-delay: 220ms; }
+.stagger > *:nth-child(6) { animation-delay: 275ms; }
+.stagger > *:nth-child(7) { animation-delay: 330ms; }
+.stagger > *:nth-child(8) { animation-delay: 385ms; }
+.stagger > * { animation: fade-slide-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; opacity: 0; }
+
+/* Liquid glass — applied to individual nav buttons/pills */
+.glass {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.13) 0%,
+      rgba(255, 255, 255, 0.04) 60%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.22);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.glass:hover {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.07) 60%,
+      rgba(255, 255, 255, 0.12) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 6px 28px rgba(0, 0, 0, 0.28);
+}
+
+/* Card hover lift */
+.card,
+.card-raised,
+.card-alert,
+.card-ink,
+.card-quiet {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.18s ease;
+}
+.card:hover,
+.card-raised:hover,
+.card-quiet:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+}
+.card-alert:hover { transform: translateY(-2px); }
+.card-ink:hover   { transform: translateY(-2px); }
 
 :focus-visible {
   outline: 2px solid var(--color-ember);

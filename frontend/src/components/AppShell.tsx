@@ -11,10 +11,11 @@ export function RequireAuth() {
 
 export function AppShell() {
   return (
-    <div className="min-h-screen px-2 py-3 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
-      <div className="shell mx-auto flex max-w-[1480px] flex-col gap-4 px-3 pb-5 pt-4 sm:gap-[22px] sm:px-[22px] sm:pb-[26px] sm:pt-[22px] lg:px-[30px] lg:pb-[30px] lg:pt-[26px]">
-        <TopNav />
-        <main className="flex flex-col gap-4 sm:gap-[22px]">
+    <div className="app-bg flex min-h-screen flex-col">
+      <TopNav />
+      {/* pt offsets the fixed nav (~68px on mobile, ~76px on desktop) */}
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-4 px-3 pb-5 pt-[80px] sm:gap-[22px] sm:px-[22px] sm:pb-[26px] sm:pt-[88px] lg:px-[30px] lg:pb-[30px] lg:pt-[90px]">
+        <main className="page-enter stagger flex flex-col gap-4 sm:gap-[22px]">
           <Outlet />
         </main>
       </div>
