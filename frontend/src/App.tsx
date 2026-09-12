@@ -8,6 +8,10 @@ import Login from '@/pages/Login';
 import MiNegocio from '@/pages/MiNegocio';
 import Pending from '@/pages/Pending';
 import Prediccion from '@/pages/Prediccion';
+import StressLab from '@/pages/StressLab';
+import Recovery from '@/pages/Recovery';
+import Funding from '@/pages/Funding';
+import CfdiConfig from '@/pages/CfdiConfig';
 
 /** Keep the store in sync with the Supabase session when auth is configured. */
 function useSupabaseSession() {
@@ -34,10 +38,10 @@ export default function App() {
           <Route path="/dashboard" element={<Inicio />} />
           <Route path="/business" element={<MiNegocio />} />
           <Route path="/forecast" element={<Prediccion />} />
-          <Route path="/stress" element={<Pending view="stress" />} />
-          <Route path="/recovery" element={<Pending view="recovery" />} />
-          <Route path="/funding" element={<Pending view="funding" />} />
-          <Route path="/settings/cfdi" element={<Pending view="cfdi" />} />
+          <Route path="/stress" element={<StressLab />} />
+          <Route path="/recovery" element={<Recovery />} />
+          <Route path="/funding" element={<Funding />} />
+          <Route path="/settings/cfdi" element={<CfdiConfig />} />
           <Route path="/settings" element={<Pending view="settings" />} />
         </Route>
       </Route>

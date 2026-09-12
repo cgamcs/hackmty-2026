@@ -3,7 +3,7 @@ import type { DashboardData, ForecastPoint, Breach, GapKind, RiskLevel } from '@
 import { QueryGate } from '@/components/QueryGate';
 import { GapChip, Icon, RISK_STYLE } from '@/components/ui';
 import { ForecastChart } from '@/components/charts/ForecastChart';
-import { mxn, compact, shortDate, addDays } from '@/lib/format';
+import { mxn, compact, shortDate } from '@/lib/format';
 import { detectBreach, classifyGap, riskLevel } from '@/mock/engine';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -44,15 +44,8 @@ function applyStress(d: DashboardData, p: StressParams): StressResult {
     pessimistic: Math.max(0, pt.pessimistic * incomeMultiplier - dailyExpenseExtra),
   }));
 
-  const receivables = d.receivables.map((r) => ({
-    ...r,
-    dueDate: p.dsoDays > 0 ? addDays(r.dueDate, p.dsoDays) : r.dueDate,
-  }));
-
   const buffer = Math.max(0, d.bufferAvailable + p.bufferMod);
-  const breach = detectBreach(forecast, d.payables.concat(), d.today);
-  // Use receivables in breach detection — pass through for future use
-  void receivables;
+  const breach = detectBreach(forecast, d.payables, d.today);
   const gap = classifyGap(forecast, breach);
   const { risk } = riskLevel(gap, breach?.shortfall ?? 0, d.income30.total * incomeMultiplier);
 
