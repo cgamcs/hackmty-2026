@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '@/components/TopNav';
 import { Icon } from '@/components/ui';
@@ -13,6 +14,7 @@ export default function Login() {
   const setUser = useSession((s) => s.setUser);
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
 
   const [mode, setMode] = useState<Mode>('signin');
@@ -35,6 +37,8 @@ export default function Login() {
         if (mode === 'signin') await apiLogin(email, password);
         else await apiRegister(email, password);
       }
+      // Also covers a session that expired without an explicit logout.
+      queryClient.clear();
       setUser({ email });
       navigate(mode === 'signup' ? '/settings/cfdi' : from, { replace: true });
     } catch (err) {

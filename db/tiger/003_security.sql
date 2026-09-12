@@ -3,16 +3,17 @@
 -- THE CRITICAL FIX IS THE FIRST BLOCK. Every policy written in 001_schema.sql is
 -- currently inert.
 --
--- PostgreSQL does not apply row level security to a table's OWNER, and never applies it
--- to a superuser. Tiger Cloud hands you `tsdbadmin`, which is a superuser and which owns
--- everything created with it — so the schema was created by, and the API connects as, a
--- role that RLS does not constrain. The policies exist, they validate, and they filter
--- nothing. There is no error and no warning: cross-tenant reads simply succeed.
+-- PostgreSQL does not apply row level security to a table's OWNER. Tiger Cloud hands you
+-- `tsdbadmin`, which owns everything created with it — so the schema was created by, and
+-- the API connected as, a role that RLS did not constrain. The policies exist, they
+-- validate, and they filter nothing. No error, no warning: cross-tenant reads succeed.
 --
--- Two changes are needed, and neither alone is enough:
+-- (Measured on Tiger Cloud: tsdbadmin is superuser=false, bypassrls=false. It bypassed
+-- RLS purely as the table owner, which FORCE below is exactly what fixes.)
+--
+-- Two changes, neither sufficient alone:
 --   1. FORCE ROW LEVEL SECURITY, so the owner is subject to its own policies.
---   2. A non-superuser application role, so the API is not a superuser in the first
---      place (FORCE still does not constrain a superuser).
+--   2. A separate application role, so the API is not the owner either.
 
 -- ── 1. make RLS actually apply ───────────────────────────────────────────────
 alter table tenants       force row level security;

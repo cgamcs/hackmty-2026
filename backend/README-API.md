@@ -17,7 +17,10 @@ cd backend && uvicorn main:app --reload --port 8000
 | `CORS_ORIGINS` | defaults to the Vite dev server |
 | `DEMO_MODE` | `1` only for a local demo — see below |
 
-Migrations, in order: `db/tiger/001` → `002` → `003` → `004`.
+Migrations, in order and as the table owner (`tsdbadmin`): `db/tiger/001` → … → `010`
+(`006` supersedes `005`, `010` supersedes `009`). Then, as `app_api`, run
+`python3 backend/check_tenants.py`: it must print `ok`. It replays registration, session lookup,
+the audit trigger and a CFDI shared by two tenants in a rolled-back transaction.
 
 ## Endpoints
 
