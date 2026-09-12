@@ -161,3 +161,73 @@ export interface DashboardData {
   residualPct: number;
   ladder: Ladder;
 }
+
+export interface StressRequest {
+  income_change_pct: number;
+  variable_expense_change_pct: number;
+  receivable_delay_days: number;
+  available_cash_buffer: number | null;
+}
+
+export interface EngineForecastPoint {
+  date: ISODate;
+  expected_inflow: number;
+  pessimistic_inflow: number;
+  variable_outflow: number;
+  obligation_outflow: number;
+  expected_balance: number;
+  pessimistic_balance: number;
+}
+
+export interface EngineBreach {
+  date: ISODate;
+  shortfall: number;
+  obligation_id: string;
+  obligation: string;
+  amount: number;
+}
+
+export interface EngineRecommendation {
+  rank: number;
+  action: string;
+  title: string;
+  description: string;
+  cash_impact: number;
+  estimated_cost: number;
+  resolves_breach: boolean;
+  parameters: Record<string, string | number | boolean>;
+}
+
+export interface EngineAnalysis {
+  points: EngineForecastPoint[];
+  breach: EngineBreach | null;
+  gap_type: 'none' | 'timing' | 'structural';
+  health_score: number;
+  resilience_score: number;
+  recommendations: EngineRecommendation[];
+  financing_decision: {
+    status: 'not_needed' | 'covered_by_recovery_plan' | 'recommended' | 'not_recommended_structural';
+    should_suggest: boolean;
+    reason: string;
+    residual_shortfall: number;
+    suggested_amount: number;
+    term_days: number;
+  };
+  diagnostics: {
+    as_of: ISODate;
+    horizon_days: number;
+    expected_ending_balance: number;
+    pessimistic_ending_balance: number;
+    minimum_pessimistic_balance: number;
+    scenario: string;
+  };
+  risk_level: RiskLevel;
+}
+
+export interface StressSimulationResponse {
+  business: { slug: string; name: string; rfc: string; owner: string };
+  account: { nickname: string; balance: number; live: boolean };
+  available_cash_buffer: number;
+  baseline: EngineAnalysis;
+  result: EngineAnalysis;
+}

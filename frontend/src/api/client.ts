@@ -1,7 +1,18 @@
-import type { DashboardData } from '@/types';
+import type { DashboardData, StressRequest, StressSimulationResponse } from '@/types';
 import { buildScenario } from '@/mock/scenario';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+async function authHeaders(): Promise<HeadersInit> {
+  if (!supabase) return { 'Content-Type': 'application/json' };
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 /** True when running without the FastAPI backend (seeded demo scenario). */
 export const isDemo = !API_BASE;
@@ -19,4 +30,19 @@ export async function fetchDashboard(accountId: string): Promise<DashboardData |
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`No pudimos cargar tu tablero (${res.status}).`);
   return (await res.json()) as DashboardData;
+}
+
+/** Run the Python engine for the business linked to the authenticated user. */
+export async function simulateStress(request: StressRequest): Promise<StressSimulationResponse> {
+  const res = await fetch(`${API_BASE ?? ''}/api/stress`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: await authHeaders(),
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { detail?: string } | null;
+    throw new Error(body?.detail ?? `No pudimos ejecutar la simulación (${res.status}).`);
+  }
+  return (await res.json()) as StressSimulationResponse;
 }

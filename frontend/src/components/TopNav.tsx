@@ -28,7 +28,6 @@ export function TopNav() {
   const { data } = useDashboard();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
   const lastScrollY = useRef(0);
 
   /* close drawer on resize to xl+ */
@@ -42,7 +41,6 @@ export function TopNav() {
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      setScrolled(y > 10);
       if (y < 60) { setVisible(true); }
       else if (y > lastScrollY.current + 6) { setVisible(false); setMobileOpen(false); }
       else if (y < lastScrollY.current - 4) { setVisible(true); }
@@ -168,34 +166,6 @@ export function TopNav() {
         </nav>
       </div>
     </header>
-  );
-}
-
-function AccountSelector({ accounts }: { accounts: { id: string; nickname: string; bank: string }[] }) {
-  const accountId = useSession((s) => s.accountId);
-  const setAccount = useSession((s) => s.setAccount);
-  const current = accounts.find((a) => a.id === accountId) ?? accounts[0];
-
-  return (
-    <label className="glass relative hidden h-10 cursor-pointer items-center gap-[9px] rounded-full px-[14px] text-[12.5px] sm:flex sm:h-11 sm:px-[18px] sm:text-[13.5px]">
-      <span className="eyebrow tracking-[.1em]">Cuenta</span>
-      <span className="hidden lg:inline">
-        {current.nickname} · {current.id.slice(0, 8)}
-      </span>
-      <Icon name="chevronDown" size={10} color="#6D7275" />
-      <select
-        aria-label="Cuenta operativa"
-        value={current.id}
-        onChange={(e) => setAccount(e.target.value)}
-        className="absolute inset-0 cursor-pointer opacity-0"
-      >
-        {accounts.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.nickname} · {a.bank} · {a.id.slice(0, 8)}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 
