@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="A" Folio="4001" Fecha="2026-08-23T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="7672.41" Moneda="MXN" Total="8900.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PPD" FormaPago="99" LugarExpedicion="36100">
+  <cfdi:Emisor Rfc="MER210126F09" Nombre="Minisuper El Roble" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="FBS200715D62" Nombre="Fonda El Buen Sazon" DomicilioFiscalReceptor="36100" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Venta de mercancia de abarrotes" ValorUnitario="7672.41" Importe="7672.41" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="7672.41" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1227.59"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="1227.59">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="7672.41" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1227.59"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="8B9E6695-F632-4283-A787-F919265B82DB" FechaTimbrado="2026-08-23T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

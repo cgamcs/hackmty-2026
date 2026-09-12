@@ -1,0 +1,337 @@
+{
+  "esperanza": {
+    "customer_id": "fcd2a794-7bce-4ef6-b09c-64203eb6f087",
+    "account_id": "42e17d81-755f-4367-9b8d-12188fd7dda5",
+    "merchants": {
+      "Distribuidora Bimbo del Bajio": "f524b9c8-2267-4290-b12c-b793fe7a4e0e",
+      "Refrescos del Centro SA": "758cbc07-60e7-4596-afe9-be3a54bc063d",
+      "Lacteos Santa Rosa": "6ac63665-c87e-4000-8e34-55bb30bd7f24",
+      "Abastos Mayoreo Leon": "805b4796-b9e9-4d4e-968a-31a6770f6da7"
+    },
+    "bills": [
+      {
+        "id": "9fa8a6f0-23dd-47d1-904e-740def2ae82c",
+        "payee": "Renta Local Comercial",
+        "amount": 18000,
+        "recurring_date": 1,
+        "kind": "rent"
+      },
+      {
+        "id": "2258416e-a226-4c8d-b83e-40bac57bc034",
+        "payee": "Nomina Quincenal",
+        "amount": 22000,
+        "recurring_date": 15,
+        "kind": "payroll"
+      },
+      {
+        "id": "d84e55b8-76e7-4fc7-9e1b-8655a4e538ad",
+        "payee": "Nomina Quincenal",
+        "amount": 22000,
+        "recurring_date": 30,
+        "kind": "payroll"
+      },
+      {
+        "id": "9b12f168-773b-4bfb-9725-ea182bbedfad",
+        "payee": "CFE Energia",
+        "amount": 3500,
+        "recurring_date": 10,
+        "kind": "utility"
+      },
+      {
+        "id": "db489699-cedc-4bba-ab79-2681e9ad0034",
+        "payee": "Internet Totalplay",
+        "amount": 800,
+        "recurring_date": 5,
+        "kind": "utility"
+      }
+    ],
+    "flows_seeded": 373,
+    "flow_errors": 0,
+    "receivables": [
+      {
+        "folio": "A4001",
+        "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 11800,
+        "issued": "2026-06-29",
+        "settled": "2026-07-25",
+        "open": false
+      },
+      {
+        "folio": "A4002",
+        "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 12400,
+        "issued": "2026-07-16",
+        "settled": "2026-08-15",
+        "open": false
+      },
+      {
+        "folio": "A4003",
+        "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 12900,
+        "issued": "2026-08-03",
+        "settled": "2026-08-31",
+        "open": false
+      },
+      {
+        "folio": "A4004",
+        "client": "Cocina Economica Do\u00f1a Mari",
+        "amount": 13100,
+        "issued": "2026-09-02",
+        "settled": null,
+        "open": true
+      }
+    ],
+    "expected_verdict": "none",
+    "projection": {
+      "balance": 180000,
+      "inflow_per_day": 9466,
+      "outflow_per_day": 5875,
+      "net_30d": 52576,
+      "min_balance": 168774,
+      "breach": null,
+      "verdict": "none",
+      "expected_collections": 11135,
+      "open_receivables": 1
+    },
+    "credit_flows_seeded": true
+  },
+  "bajio": {
+    "customer_id": "df5a5614-15af-4225-83e8-a31954444f8e",
+    "account_id": "1848f1f2-61fb-460a-9196-dff8c6a371a8",
+    "merchants": {
+      "Abastos Mayoreo Leon": "00ae9930-d2f5-463e-90d1-195ab59427ce",
+      "Empaques del Centro": "f9198026-6d5c-42bf-9c55-f3a551b32fc6",
+      "Transportes Rapidos GTO": "d85675dc-64ac-4727-a159-02133fddecd1"
+    },
+    "bills": [
+      {
+        "id": "0ee14206-1428-4d58-9064-51aec49200c3",
+        "payee": "Renta Nave Industrial",
+        "amount": 28000,
+        "recurring_date": 1,
+        "kind": "rent"
+      },
+      {
+        "id": "6a2b2f15-dbf9-4062-a873-1731e4f2056e",
+        "payee": "Nomina Operativa Quincenal",
+        "amount": 78000,
+        "recurring_date": 15,
+        "kind": "payroll"
+      },
+      {
+        "id": "3cf43bc2-a1e2-489b-9f82-e656fd4e166e",
+        "payee": "Nomina Operativa Quincenal",
+        "amount": 78000,
+        "recurring_date": 30,
+        "kind": "payroll"
+      },
+      {
+        "id": "938f252a-dd6b-409c-9dbf-1ae4042ce675",
+        "payee": "CFE Energia",
+        "amount": 6000,
+        "recurring_date": 10,
+        "kind": "utility"
+      }
+    ],
+    "flows_seeded": 307,
+    "flow_errors": 0,
+    "receivables": [
+      {
+        "folio": "A4001",
+        "client": "Tiendas Del Valle SA",
+        "amount": 44000,
+        "issued": "2026-06-04",
+        "settled": "2026-06-19",
+        "open": false
+      },
+      {
+        "folio": "A4002",
+        "client": "Tiendas Del Valle SA",
+        "amount": 51500,
+        "issued": "2026-06-24",
+        "settled": "2026-07-08",
+        "open": false
+      },
+      {
+        "folio": "A4003",
+        "client": "Tiendas Del Valle SA",
+        "amount": 47200,
+        "issued": "2026-07-14",
+        "settled": "2026-07-30",
+        "open": false
+      },
+      {
+        "folio": "A4004",
+        "client": "Tiendas Del Valle SA",
+        "amount": 58000,
+        "issued": "2026-08-01",
+        "settled": "2026-08-16",
+        "open": false
+      },
+      {
+        "folio": "A4005",
+        "client": "Super Mercados Norte",
+        "amount": 52000,
+        "issued": "2026-05-25",
+        "settled": "2026-07-08",
+        "open": false
+      },
+      {
+        "folio": "A4006",
+        "client": "Super Mercados Norte",
+        "amount": 49800,
+        "issued": "2026-06-16",
+        "settled": "2026-08-01",
+        "open": false
+      },
+      {
+        "folio": "A4007",
+        "client": "Super Mercados Norte",
+        "amount": 55300,
+        "issued": "2026-07-08",
+        "settled": "2026-08-22",
+        "open": false
+      },
+      {
+        "folio": "A4008",
+        "client": "Autoservicio La Central",
+        "amount": 41000,
+        "issued": "2026-05-30",
+        "settled": "2026-06-21",
+        "open": false
+      },
+      {
+        "folio": "A4009",
+        "client": "Autoservicio La Central",
+        "amount": 46500,
+        "issued": "2026-06-19",
+        "settled": "2026-07-27",
+        "open": false
+      },
+      {
+        "folio": "A4010",
+        "client": "Autoservicio La Central",
+        "amount": 39700,
+        "issued": "2026-07-10",
+        "settled": "2026-08-31",
+        "open": false
+      },
+      {
+        "folio": "A4011",
+        "client": "Tiendas Del Valle SA",
+        "amount": 61000,
+        "issued": "2026-09-04",
+        "settled": null,
+        "open": true
+      },
+      {
+        "folio": "A4012",
+        "client": "Tiendas Del Valle SA",
+        "amount": 49000,
+        "issued": "2026-09-10",
+        "settled": null,
+        "open": true
+      },
+      {
+        "folio": "A4013",
+        "client": "Super Mercados Norte",
+        "amount": 47500,
+        "issued": "2026-08-25",
+        "settled": null,
+        "open": true
+      },
+      {
+        "folio": "A4014",
+        "client": "Autoservicio La Central",
+        "amount": 55000,
+        "issued": "2026-08-29",
+        "settled": null,
+        "open": true
+      }
+    ],
+    "expected_verdict": "timing",
+    "projection": {
+      "balance": 38000,
+      "inflow_per_day": 6864,
+      "outflow_per_day": 1731,
+      "net_30d": 144630,
+      "min_balance": -24600,
+      "breach": {
+        "date": "2026-09-15",
+        "shortfall": 24600,
+        "obligation": "Nomina Operativa Quincenal"
+      },
+      "verdict": "timing",
+      "expected_collections": 180625,
+      "open_receivables": 4
+    },
+    "credit_flows_seeded": true
+  },
+  "roble": {
+    "customer_id": "8a98fbc1-37c5-4649-82ab-14d8ea958b07",
+    "account_id": "42e67e22-0028-4c12-9cc4-c8318c77bc0a",
+    "merchants": {
+      "Distribuidora Bimbo del Bajio": "eb4f0847-9c42-478e-8f0d-d15228e0338b",
+      "Refrescos del Centro SA": "b108e495-34c7-4477-9d4a-9409d12282e9"
+    },
+    "bills": [
+      {
+        "id": "49d45c5c-6c43-4f4b-ae1b-481dd3917877",
+        "payee": "Renta Local Comercial",
+        "amount": 28000,
+        "recurring_date": 1,
+        "kind": "rent"
+      },
+      {
+        "id": "8d278259-3793-4ae3-8b9d-18551675b431",
+        "payee": "Nomina Quincenal",
+        "amount": 24000,
+        "recurring_date": 15,
+        "kind": "payroll"
+      },
+      {
+        "id": "38ec5ab3-6216-445a-987d-5c82bbcf17cd",
+        "payee": "Nomina Quincenal",
+        "amount": 24000,
+        "recurring_date": 30,
+        "kind": "payroll"
+      },
+      {
+        "id": "1b3b5b44-ecd0-49c7-84dc-9eb41eab9cec",
+        "payee": "CFE Energia",
+        "amount": 4200,
+        "recurring_date": 10,
+        "kind": "utility"
+      }
+    ],
+    "flows_seeded": 295,
+    "flow_errors": 0,
+    "receivables": [
+      {
+        "folio": "A4001",
+        "client": "Fonda El Buen Sazon",
+        "amount": 8900,
+        "issued": "2026-08-23",
+        "settled": null,
+        "open": true
+      }
+    ],
+    "expected_verdict": "structural",
+    "projection": {
+      "balance": 26000,
+      "inflow_per_day": 5926,
+      "outflow_per_day": 4085,
+      "net_30d": -17403,
+      "min_balance": -7455,
+      "breach": {
+        "date": "2026-10-01",
+        "shortfall": 7455,
+        "obligation": "Renta Local Comercial"
+      },
+      "verdict": "structural",
+      "expected_collections": 7565,
+      "open_receivables": 1
+    },
+    "credit_flows_seeded": true
+  }
+}

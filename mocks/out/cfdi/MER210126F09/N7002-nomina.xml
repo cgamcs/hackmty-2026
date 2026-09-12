@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="N" Folio="7002" Fecha="2026-08-28T09:00:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="24000.00" Moneda="MXN" Total="24000.00" TipoDeComprobante="N" Exportacion="01" FormaPago="03" LugarExpedicion="36100">
+  <cfdi:Emisor Rfc="MER210126F09" Nombre="Minisuper El Roble" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="Empleado Generico" DomicilioFiscalReceptor="36100" RegimenFiscalReceptor="605" UsoCFDI="CN01"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="84111505" Cantidad="1.00" ClaveUnidad="ACT" Descripcion="Pago de nomina" ValorUnitario="24000.00" Importe="24000.00" Descuento="0.00" ObjetoImp="01"/>
+  </cfdi:Conceptos>
+  <cfdi:Complemento>
+    <nomina12:Nomina xmlns:nomina12="http://www.sat.gob.mx/nomina12" Version="1.2" TipoNomina="O" FechaPago="2026-08-28" FechaInicialPago="2026-08-28" FechaFinalPago="2026-08-28" NumDiasPagados="15.000" TotalPercepciones="24000.00" TotalDeducciones="0.00">
+      <nomina12:Emisor RegistroPatronal="B5510768108"/>
+      <nomina12:Receptor Curp="XEXX010101HNEXXXA4" TipoContrato="01" TipoRegimen="02" NumEmpleado="001" PeriodicidadPago="04" NumSeguridadSocial="12345678901" FechaInicioRelLaboral="2022-01-15" Antiguedad="P180W" SalarioDiarioIntegrado="1600.00" ClaveEntFed="GTO"/>
+      <nomina12:Percepciones TotalSueldos="24000.00" TotalGravado="24000.00" TotalExento="0.00">
+        <nomina12:Percepcion TipoPercepcion="001" Clave="001" Concepto="Sueldos" ImporteGravado="24000.00" ImporteExento="0.00"/>
+      </nomina12:Percepciones>
+    </nomina12:Nomina>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

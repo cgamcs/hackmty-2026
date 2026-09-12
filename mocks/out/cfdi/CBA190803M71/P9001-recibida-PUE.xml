@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="P" Folio="9001" Fecha="2026-08-23T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="689.66" Moneda="MXN" Total="800.01" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="36500">
+  <cfdi:Emisor Rfc="AML960815W22" Nombre="Abastos Mayoreo Leon" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CBA190803M71" Nombre="Comercializadora del Bajio" DomicilioFiscalReceptor="36500" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Resurtido abarrotes" ValorUnitario="689.66" Importe="689.66" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="689.66" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="110.35"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="110.35">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="689.66" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="110.35"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="E1609645-67E3-4B1B-9D08-A8A437231234" FechaTimbrado="2026-08-23T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>
