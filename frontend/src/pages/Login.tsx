@@ -79,8 +79,8 @@ export default function Login() {
     'mt-[9px] h-[54px] w-full rounded-2xl border border-ash/18 bg-dim/10 px-[18px] text-[14.5px] text-ghost outline-none placeholder:text-dim focus:border-ember';
 
   return (
-    <div className="min-h-screen px-3 py-4 sm:px-6 sm:py-8 lg:px-10">
-      <div className="shell mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1480px] flex-col px-5 py-8 sm:px-11 sm:py-10">
+    <div className="app-bg flex min-h-screen flex-col">
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col px-5 py-8 sm:px-11 sm:py-10">
         <header className="flex flex-none flex-wrap items-center justify-between gap-4">
           <Brand />
           <div className="flex items-center gap-3">
