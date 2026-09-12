@@ -130,6 +130,15 @@ Note the **singular** path segment on purchases and withdrawals.
   against `GET /customers` instead.
 - Public endpoints return 200 even with an invalid key, so a working response is
   never proof of a valid key either.
+- **`balance` is immutable after account creation.** Posting deposits, purchases or
+  withdrawals does not move it, and `PUT /accounts/{id}` silently ignores the field —
+  it returns `202 Accepted account update`, applies `nickname`, and echoes the *old*
+  balance back. Set the balance you want in the `POST` that creates the account; the
+  only way to change it afterwards is delete and recreate.
+- **`PUT /bills/{billId}` works in full**, including `payment_amount`. Bills are the
+  practical lever for adjusting a seeded scenario.
+- **`purchase_date` is accepted on create and honoured**, even though it is absent
+  from `PurchaseCreate`. Backdated restock history works.
 
 ## Request bodies
 

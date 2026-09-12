@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="P" Folio="9005" Fecha="2026-08-22T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="14224.14" Moneda="MXN" Total="16500.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" FormaPago="03" LugarExpedicion="36500">
+  <cfdi:Emisor Rfc="ECE120603J41" Nombre="Empaques del Centro" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CBA190803M71" Nombre="Comercializadora del Bajio" DomicilioFiscalReceptor="36500" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Resurtido insumos" ValorUnitario="14224.14" Importe="14224.14" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="14224.14" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2275.86"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="2275.86">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="14224.14" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="2275.86"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="A5AA8F16-6D89-4630-B78B-19EFFE182294" FechaTimbrado="2026-08-22T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

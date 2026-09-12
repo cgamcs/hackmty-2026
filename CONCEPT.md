@@ -494,7 +494,8 @@ parser lands.
 
 | Risk | Impact | Action |
 |------|--------|--------|
-| `PurchaseCreate` has no date field; `Purchase` responses carry `purchase_date`. Backdating unverified. | Restock history collapses onto today and the outflow model breaks. | Test with a real customer key before writing the seeder. |
+| ~~`purchase_date` backdating unverified~~ **RESOLVED** | — | Verified: `purchase_date` is accepted on create and honoured despite being absent from `PurchaseCreate`. Backdated restock history works. |
+| `balance` is immutable after account creation. Posted flows do not move it, and `PUT /accounts/{id}` ignores the field while returning 202 and echoing the old value. | A seeded scenario cannot be re-tuned through the balance; a wrong opening balance means deleting and recreating the account. | Set the balance in the creating `POST`. Tune scenarios through `bills`, which `PUT` honours in full. |
 | Auth enforcement is route-dependent. `POST /accounts/{id}/loans` returns `"Invalid API key."`, while purchases and withdrawals return field-validation errors first. | A 400 is not proof the key works, and the 401 path exists on some routes only. | Validate keys against `GET /customers`. |
 | `Purchase`, `Withdrawal` and `Transfer` are absent from the OpenAPI spec. | Generated clients are incomplete. | Shapes recovered from live responses; hand-write those types. |
 | Fresh sandbox is empty. | Nothing to forecast until seeded. | Phase 0 is a hard dependency for any live demo. |
