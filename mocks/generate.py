@@ -89,6 +89,9 @@ class Nessie:
     def put(self, path: str, body: dict):
         return self._request("PUT", path, body)
 
+    def delete(self, path: str):
+        return self._request("DELETE", path, None)
+
     def get(self, path: str):
         try:
             return self._request("GET", path, None)
@@ -99,6 +102,24 @@ class Nessie:
 
 
 # ── sales model ───────────────────────────────────────────────────────────────
+
+def restock_schedule(sc: Scenario) -> list[tuple[object, date, int]]:
+    """(supplier, day, amount) for every restock in the history window.
+
+    Single source of truth: both the Nessie purchases and the supplier CFDI read from
+    here. Computing the amount twice is how the payables side ended up unmatchable.
+    """
+    out = []
+    for sup in sc.suppliers:
+        for i in range(HISTORY_DAYS, 0, -sup.restock_every_days):
+            day = TODAY - timedelta(days=i)
+            gross = daily_sales(sc, day, HISTORY_DAYS - i)
+            amount = int(gross * sc.restock_ratio * sup.restock_every_days
+                         / max(len(sc.suppliers), 1))
+            if amount > 0:
+                out.append((sup, day, amount))
+    return out
+
 
 def daily_sales(sc: Scenario, day: date, index: int) -> int:
     """Deterministic per-day retail sales: baseline x dow x quincena x trend."""
@@ -145,17 +166,20 @@ def write_cfdi(sc: Scenario) -> dict:
             "open": settled is None,
         })
 
-    # Supplier invoices received — the payable side.
+    # Supplier invoices received — the payable side. Amounts and dates come from the
+    # shared restock schedule so each one matches its Nessie purchase exactly. The
+    # purchase amount is the invoice TOTAL (IVA included), so the CFDI base is net.
     folio = 9001
-    for sup in sc.suppliers:
-        for weeks_ago in (1, 3, 6):
-            issued = TODAY - timedelta(days=weeks_ago * 7)
-            amount = int(sc.daily_base_sales * sup.restock_every_days * sc.restock_ratio)
+    by_supplier: dict[str, list] = {}
+    for sup, day, amount in restock_schedule(sc):
+        by_supplier.setdefault(sup.name, []).append((sup, day, amount))
+    for name, restocks in by_supplier.items():
+        for sup, day, amount in restocks[-4:]:      # most recent four per supplier
             xml = cfdi.factura(
-                emisor_rfc=SUPPLIER_RFCS.get(sup.name, "XAXX010101000"),
-                emisor_nombre=sup.name,
+                emisor_rfc=SUPPLIER_RFCS.get(name, "XAXX010101000"),
+                emisor_nombre=name,
                 receptor_rfc=sc.rfc, receptor_nombre=sc.name, receptor_zip=sc.zip,
-                base=round(amount / (1 + cfdi.IVA), 2), fecha=issued,
+                base=round(amount / (1 + cfdi.IVA), 2), fecha=day,
                 serie="P", folio=folio, lugar=sc.zip, metodo_pago="PUE",
                 descripcion=f"Resurtido {sup.category}")
             (outdir / f"P{folio}-recibida-PUE.xml").write_text(xml)
@@ -269,6 +293,31 @@ def seed(api: Nessie, sc: Scenario, cfdi_meta: dict, existing: dict) -> dict:
 
     jobs: list[tuple[str, dict]] = []
 
+    # Receivable settlements are re-derived from the scenario every run: the invoice
+    # set changes as payment behaviour is tuned, and a stale settlement would leave an
+    # invoice matched to a deposit that no longer corresponds to it.
+    settled = [r for r in cfdi_meta["receivables"] if not r["open"]]
+    want = {(r["folio"], r["amount"], r["settled"]) for r in settled}
+    have = set()
+    for d in api.get(f"/accounts/{aid}/deposits"):
+        if "Cobro factura" not in (d.get("description") or ""):
+            continue
+        folio = d["description"].split()[2] if len(d["description"].split()) > 2 else ""
+        key = (folio, d.get("amount"), d.get("transaction_date"))
+        if key in want:
+            have.add(key)
+        else:
+            api.delete(f"/deposits/{d['_id']}")
+    for r in settled:
+        if (r["folio"], r["amount"], r["settled"]) in have:
+            continue
+        jobs.append((f"/accounts/{aid}/deposits", {
+            "medium": "balance", "transaction_date": r["settled"],
+            "status": "completed", "amount": r["amount"],
+            "description": f"Cobro factura {r['folio']} {r['client']}"}))
+    if jobs:
+        print(f"  settlements {len(jobs)} to post, {len(have)} already correct")
+
     # Credit sales settling on terms. Without these, a business that sells mostly on
     # credit has the bulk of its revenue missing from the data and reads as insolvent.
     if not entry.get("credit_flows_seeded"):
@@ -305,15 +354,6 @@ def seed(api: Nessie, sc: Scenario, cfdi_meta: dict, existing: dict) -> dict:
                 "medium": "balance", "transaction_date": day.isoformat(),
                 "status": "completed", "amount": cash,
                 "description": "Venta diaria mostrador"}))
-
-        # Settled receivables -> deposits carrying the invoice folio, so Phase 2 matches.
-        for r in cfdi_meta["receivables"]:
-            if r["open"]:
-                continue
-            jobs.append((f"/accounts/{aid}/deposits", {
-                "medium": "balance", "transaction_date": r["settled"],
-                "status": "completed", "amount": r["amount"],
-                "description": f"Cobro factura {r['folio']} {r['client']}"}))
 
         # Restocks -> purchases against the supplier merchant.
         for sup in sc.suppliers:

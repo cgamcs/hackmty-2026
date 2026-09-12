@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="A" Folio="4006" Fecha="2026-09-09T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="42241.38" Moneda="MXN" Total="49000.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PPD" FormaPago="99" LugarExpedicion="36500">
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="A" Folio="4006" Fecha="2026-06-16T11:30:00" Sello="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificado="00001000000509846663" Certificado="MOCKBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" SubTotal="42931.03" Moneda="MXN" Total="49799.99" TipoDeComprobante="I" Exportacion="01" MetodoPago="PPD" FormaPago="99" LugarExpedicion="36500">
   <cfdi:Emisor Rfc="CBA190803M71" Nombre="Comercializadora del Bajio" RegimenFiscal="601"/>
-  <cfdi:Receptor Rfc="TDV150612J88" Nombre="Tiendas Del Valle SA" DomicilioFiscalReceptor="36500" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Receptor Rfc="SMN160228R44" Nombre="Super Mercados Norte" DomicilioFiscalReceptor="36500" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
   <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Venta de mercancia de abarrotes" ValorUnitario="42241.38" Importe="42241.38" ObjetoImp="02">
+    <cfdi:Concepto ClaveProdServ="50202306" Cantidad="1.00" ClaveUnidad="H87" Descripcion="Venta de mercancia de abarrotes" ValorUnitario="42931.03" Importe="42931.03" ObjetoImp="02">
       <cfdi:Impuestos>
         <cfdi:Traslados>
-          <cfdi:Traslado Base="42241.38" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6758.62"/>
+          <cfdi:Traslado Base="42931.03" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6868.96"/>
         </cfdi:Traslados>
       </cfdi:Impuestos>
     </cfdi:Concepto>
   </cfdi:Conceptos>
-  <cfdi:Impuestos TotalImpuestosTrasladados="6758.62">
+  <cfdi:Impuestos TotalImpuestosTrasladados="6868.96">
     <cfdi:Traslados>
-      <cfdi:Traslado Base="42241.38" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6758.62"/>
+      <cfdi:Traslado Base="42931.03" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6868.96"/>
     </cfdi:Traslados>
   </cfdi:Impuestos>
   <cfdi:Complemento>
-    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="C8CBEE85-D11C-4865-A94D-9D46A337C58B" FechaTimbrado="2026-09-09T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="1BF38222-223C-4E49-9080-2FAE43AA0624" FechaTimbrado="2026-06-16T11:30:00" RfcProvCertif="SAT970701NN3" SelloCFD="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" NoCertificadoSAT="00001000000509846663" SelloSAT="MOCKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
   </cfdi:Complemento>
 </cfdi:Comprobante>

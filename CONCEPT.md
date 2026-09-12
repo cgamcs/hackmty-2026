@@ -7,6 +7,55 @@ See `NESSIE-API.md` for the verified API reference and `nessie-openapi-spec.yaml
 
 ---
 
+## 0. Scope and split — under 24 hours
+
+Sections 1–4 describe the product. What is actually being built in the time available is
+narrower, and the cuts are deliberate.
+
+### Shipping
+
+| Area | Owner | State |
+|------|-------|-------|
+| Mock data (CFDI + Nessie seeding) | — | **done** — `mocks/`, 3 scenarios verified |
+| CFDI parser | — | **done** — `engine/cfdi_parser.py` |
+| Reconciliation CFDI ↔ Nessie | — | **done** — `engine/reconcile.py` |
+| Learned payment terms | — | **done** — `engine/terms.py` |
+| Forecast engine + breach + classifier | teammate | to build — contract in §5 Phases 3–6 |
+| Supabase schema and wiring | project owner | to build — schema in §3 |
+| React + Tailwind front end | — | to build — views in §6 |
+
+Every finished module runs standalone as its own check: `python3 engine/reconcile.py`,
+`python3 engine/terms.py`, `python3 mocks/generate.py`.
+
+### Cut
+
+- **The bank / portfolio view.** It is the Capital One differentiator and costs little —
+  the same engine in a loop — but the product stands without it and does not stand
+  without the business view. Section 4's adapter layer and §5 Phase 8 stay as design
+  narrative, not as code.
+- **Any simulated bank connection.** A fake OAuth handshake returning a token nothing
+  consumes is theatre. Replaced by account-number entry (§6).
+- **Credit blacklist.** Considered and rejected — see §7.
+
+### The interface between the two builders
+
+The forecast engine consumes what reconciliation already produces and nothing else:
+
+```python
+rec    = reconcile(batch, deposits, purchases)   # engine/reconcile.py
+terms  = learn_terms(rec.matched)                # engine/terms.py
+tuned  = apply_terms(rec, terms)
+
+tuned.expected_collections(HORIZON_DAYS)  # -> {date: amount}, already risk-discounted
+tuned.open_receivables                    # -> [OpenItem] with expected_date, amount
+tuned.open_payables
+rec.cash_sales                            # deposits with no invoice — retail norm
+```
+
+Plus, straight from Nessie: `account.balance`, `deposits`, `purchases`, `bills`.
+
+---
+
 ## 1. The idea
 
 We are not a bank. We are the **intermediary between banks and the SMB**.
@@ -125,6 +174,47 @@ Supabase holds everything Nessie has no concept of:
 
 Snapshotting forecast runs matters more than it looks: when a judge asks "why did it
 recommend that?", the answer is a stored row, not a re-run that may now differ.
+
+### Schema
+
+```sql
+tenants          id, razon_social, rfc, account_id, account_number_last4, created_at
+invoices         uuid PK, tenant_id, direction, tipo, metodo_pago,
+                 counterparty_rfc, counterparty_name,
+                 fecha, due_date, total, subtotal, storage_path, created_at
+reconciliations  id, tenant_id, invoice_uuid, flow_id, flow_kind, method, flow_date
+terms            tenant_id, counterparty_rfc, days, observations, spread, learned
+obligations      id, tenant_id, payee, amount, day_of_month,
+                 kind, rigidity, slack_days, source
+forecast_runs    id, tenant_id, created_at, horizon_days, balance_at_run,
+                 curve jsonb, breach jsonb, verdict
+suppressions     tenant_id, reason, forecast_run_id, expires_at
+```
+
+`invoices.uuid` is the CFDI folio fiscal and **must carry a unique constraint**. It is the
+natural key, and without it re-uploading the same SAT export double-counts the receivable
+book. That failure does not raise an error — it silently produces a recommendation to
+collect money that does not exist.
+
+`account_number` is never stored in full: the tenant types it once, the server resolves it
+to an `account_id`, and only the last four digits are kept for display.
+
+### Storing the CFDI XML
+
+```
+upload ZIP
+  -> unzip in FastAPI (the ZIP itself is never stored)
+  -> each XML to Storage:  cfdi/{tenant_id}/{uuid}.xml
+  -> parse ONCE
+  -> extracted fields to invoices
+```
+
+**Never parse on read.** Queries hit Postgres; Storage is not touched again in normal
+operation. A dashboard that parses on every load re-reads hundreds of objects per page
+view.
+
+The raw XML is still worth keeping: to re-parse when the parser improves, because the UUID
+and seal are the legal artefact if an amount is disputed, and for SAT traceability.
 
 ### Forecast engine — Pandas and NumPy
 
@@ -298,9 +388,9 @@ TIMING GAP
  ├─ 1. Accelerate a receivable
  │       open receivables that could land before the breach date
  │       cost = early-payment discount offered
- ├─ 2. Shift a payable or payroll date
- │       only obligations with slack; never past a hard legal date
- │       cost = zero, or a supplier relationship cost
+ ├─ 2. Shift a payable
+ │       never past a hard legal date; slack is derived, not configured
+ │       cost = supplier relationship risk, which is NOT zero
  ├─ 3. Draw down buffer
  │       cost = zero, if the buffer survives the rest of the horizon
  └─ 4. Credit — only if 1–3 leave a residual gap
@@ -316,6 +406,24 @@ STRUCTURAL DEFICIT
 
 That last clause is deliberate. A broker that sometimes refuses to place a loan is the one
 whose recommendations mean anything.
+
+### Rung 2 has a real cost, and it is derivable
+
+Treating "delay a supplier payment" as free is how a tool like this loses a business its
+suppliers. Uniform terms are not a feature — they are the failure mode. Slack per supplier
+comes from what the data already shows:
+
+- **Dependence.** Restock frequency, plus whether the merchant list holds alternatives in
+  the same category. A supplier delivering every three days with no substitute is
+  untouchable regardless of arithmetic.
+- **Proven tolerance.** If this business has already paid this supplier late and the
+  relationship continued, that tolerance is observed rather than guessed. No late payment
+  in the history means no evidence of slack, so assume none.
+- **Concentration.** Share of total spend. Delaying the largest supplier is the highest-risk
+  move available and should rank below drawing a credit line, not above it.
+
+Where the data is silent, the answer is zero slack. The ladder proposes moving a payable
+only when it can point at evidence, and payroll and taxes never move at all.
 
 ### Phase 8 — Two views
 
@@ -333,13 +441,59 @@ as a demo data source.
 
 ## 6. Views
 
+Business view only. The bank view is cut (§0).
+
 | View | Purpose | Depends on |
 |------|---------|-----------|
 | Login | Supabase auth, one tenant per SMB | — |
-| Integration config | CFDI upload · bank connection · hard-date obligations | Login |
+| Integration | Razón social · account number · CFDI upload · confirm obligations | Login |
 | Dashboard | "What is happening?" — position, 30-day dual-band curve, open receivables and payables | Integration |
 | Warnings / solutions | System **push**: a breach was detected, here is the ranked ladder | Dashboard data |
 | Simulations | User **pull**: manual what-if ("delay Bimbo 5 days?") | Dashboard data |
+
+### The integration view — four fields
+
+| # | Field | How it arrives |
+|---|-------|----------------|
+| 1 | Razón social | typed |
+| 2 | Account number | typed — see below |
+| 3 | CFDI | ZIP / multi-file upload |
+| 4 | Obligations | **pre-filled** from Nessie `bills`; the tenant sets rigidity and slack only |
+
+Fields 2 and 4 are not free data entry, and field 4 is the reason the form is cheap to
+build: `bills` already carry `payee`, `payment_amount` and `recurring_date`, so the tenant
+confirms rather than types. The RFC is likewise derived from the uploaded CFDI and only
+confirmed.
+
+`payroll` and `tax` obligations are `hard` and **not editable**. Shifting payroll past its
+legal date violates the LFT, so the engine must not be able to propose it even with the
+user's consent. `slack_days` defaults to **0**: no stated slack means no slack.
+
+### Account number, not a dropdown
+
+One API key sees every account in the sandbox, so a dropdown would show one business the
+other tenants. The tenant types their account number instead.
+
+**The lookup must be server-side.** A front end that calls `GET /accounts` and filters in
+JavaScript leaks the full list into the browser's network tab — the same exposure, merely
+hidden.
+
+```
+POST /connect  {account_number}
+  -> FastAPI resolves it with the server-side key
+  -> stores tenant_id -> account_id
+  -> returns only that account's {nickname, balance}
+```
+
+A miss returns "not found", never "exists but is not yours".
+
+Demo account numbers:
+
+| Business | Account number | Verdict |
+|----------|----------------|---------|
+| Abarrotes La Esperanza | 1808841382767043 | no breach |
+| Comercializadora del Bajio | 3505305311636760 | timing gap |
+| Minisuper El Roble | 9424778033669495 | structural |
 
 ### Two things to settle before building
 
@@ -391,6 +545,45 @@ industry average. That comes from matching historical CFDI against settled depos
 The SAT allows bulk CFDI download, so requesting a ZIP of the last 6–12 months is realistic.
 **Design the upload for multi-file or ZIP from the start**, never a single file.
 
+### Payment terms are learned, not assumed
+
+CFDI records that a PPD invoice is paid later but **never says when** — terms are
+commercial, not fiscal, so the SAT does not collect them. A single global default is
+wrong twice over: it describes no real business, and it does not generalize to an SMB
+whose clients pay at 15, 60 or 90 days.
+
+Reconciliation already produces the answer. Every matched invoice carries its issue date
+and the date the money actually landed, and that difference *is* that counterparty's
+behaviour:
+
+```
+observed history  ->  median issue-to-settlement lag per counterparty
+no history        ->  NET_TERMS_DAYS (cold start only)
+```
+
+The default stops being an assumption about everybody and becomes a fallback for a
+counterparty we have never been paid by. Measured on the seeded scenarios:
+
+| Client | Learned | Spread | Verdict |
+|--------|---------|--------|---------|
+| Tiendas Del Valle | 15d | 2d | reliable |
+| Super Mercados Norte | 45d | 2d | reliable |
+| Autoservicio La Central | 38d | 30d | **variable — do not trust the date** |
+| Cocina Economica Doña Mari | 28d | 4d | reliable |
+
+The spread matters as much as the median. A counterparty whose lag swings 30 days has a
+median that means nothing operationally, and rung 1 must not present its landing date as
+dependable.
+
+**Why this is worth the effort:** on `bajio` the learned terms leave the 30-day
+collection total completely unchanged at 180,625 while moving every landing date — one
+invoice from day 22 to day 7, another from day 12 to day 27. An aggregate metric would
+report that nothing happened. The liquidity decision changes entirely.
+
+`NET_TERMS_DAYS` and `HORIZON_DAYS` both default to 30 but are unrelated quantities —
+one a commercial term, the other a projection window. They are separate config so that
+changing the forecast horizon cannot silently reprice every client's credit terms.
+
 ### The PUE / PPD trap
 
 `MetodoPago="PUE"` means **already paid**. It is not a receivable.
@@ -398,6 +591,47 @@ The SAT allows bulk CFDI download, so requesting a ZIP of the last 6–12 months
 Only `PPD` invoices are open receivables. Treating every issued CFDI as a receivable inflates
 the book massively and makes rung 1 recommend collecting invoices that are already collected.
 Filter on `MetodoPago="PPD"` and cross-check the payment complement.
+
+### No credit blacklist — suppression with an expiry instead
+
+A permanent "never offer credit to this SMB" list was considered and rejected.
+
+**It is already computed.** The timing-vs-structural classifier *is* the decision not to
+offer credit. A blacklist duplicates it as stored state, and stored state goes stale: a
+business classified structural in September may be healthy in December, and the list would
+keep refusing it. **Eligibility is a function, not a state** — evaluated fresh each run
+against today's data. A function cannot go stale.
+
+**It also inverts the product's own posture.** The differentiator is being able to say
+"do not borrow" as revisable advice on the client's side. A blacklist is a permanent
+judgement about a business, held by the intermediary — the thing banks do badly and this
+product exists to improve on.
+
+**And it edges toward a regulated activity.** In Mexico, maintaining a register of
+businesses denied credit resembles what a *sociedad de información crediticia* does (Buró
+de Crédito, Círculo de Crédito), which requires authorisation. Whether a broker's internal
+list falls under it is a question for counsel — but "we keep our own blacklist" is an
+awkward answer to give a judge at a banking hackathon.
+
+What gets built instead, derived from the same classifier:
+
+```jsonc
+{
+  "rfc": "...",
+  "reason": "structural_deficit",
+  "forecast_run_id": "...",        // the snapshot that produced it — auditable
+  "expires_at": "...",             // self-clearing, no manual removal
+  "lifts_when": "verdict is no longer structural"
+}
+```
+
+It expires on its own, points at its evidence so the business can see why, and lifts on
+data rather than on paperwork.
+
+**The one legitimate hard exclusion** is sanctions lists and declared bankruptcies — and
+those have a defining property: they come from outside. We consume them, we do not author
+them. That is compliance, not opinion. If we wrote the entry, it is a temporary
+suppression with evidence; if an authority wrote it, it is a hard filter.
 
 ### What we never ask for
 
@@ -471,14 +705,25 @@ why the sponsor API is not decorative:
 
 ## 11. Build order
 
-1. **Phase 0** — seed several SMBs with distinct cash shapes. Nothing demos without it.
-2. **Phases 1, 3, 4, 5** — ingest, model, project, detect breach. Smallest real slice.
-3. **Phases 6, 7** — classifier and ladder. This is what wins.
-4. **Phase 2** — CFDI reconciliation. Needed for rung 1 of the ladder.
-5. **Phase 8** — portfolio loop. Nearly free once the engine exists.
+Phases 0, 1 and 2 and the learned-terms layer are done (§0). What remains, in order:
 
-If time collapses, a hardcoded receivables list keeps the ladder demoable while the CFDI
-parser lands.
+1. **Phases 3, 4, 5** — decompose inflows, project 30 days, detect the breach. The
+   smallest slice that shows something real. Consumes the reconciliation output in §0.
+2. **Phase 6** — the timing-vs-structural classifier. One comparison, and the single most
+   important piece of intelligence in the system.
+3. **Supabase wiring** — schema in §3, then the integration view's four fields.
+4. **Phase 7** — the ladder. Rungs 1 and 2 already have their data.
+5. Dashboard, then warnings and simulations off the same engine.
+
+If time collapses, the seeded scenarios already carry the three verdicts, so the classifier
+can be demonstrated against `mocks/out/seed-manifest.json` before any front end exists.
+
+### Demo path
+
+Log in as Comercializadora del Bajio, account `3505305311636760`. It has a payroll breach
+on day 3 with a 24,600 shortfall, four open receivables totalling 212,500, and learned
+terms that move those collections from days 12–28 to days 7–27. It is the one scenario
+where every part of the product has something to say.
 
 ## 12. Deliberate non-goals
 
@@ -486,6 +731,11 @@ parser lands.
   data at a 30-day horizon, and it explains itself to a judge and to a shopkeeper. "Your
   Thursday before payday is your worst cash day" sells; a weight vector does not.
 - **No real multi-bank integration.** Adapters are mocked by design, and we say so.
+- **No simulated bank connection.** A fake consent handshake returning a token nothing
+  consumes is theatre. Account-number entry, and one honest sentence in the pitch about
+  what production would do instead.
+- **No credit blacklist.** Rejected on design and regulatory grounds — see §7.
+- **No bank / portfolio view** in this build. Design retained in §4 and §5 Phase 8.
 - **No CFDI cancellation, complemento chains, or tax computation.** Parse only what the
   forecast needs: issuer, receiver, amount, date, terms.
 - **No multi-currency or multi-entity consolidation.**
