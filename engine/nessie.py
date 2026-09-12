@@ -53,7 +53,8 @@ class Nessie:
         return self.get("/customers") or []
 
     def account(self, account_id: str) -> dict | None:
-        return next((a for a in self.accounts() if a["_id"] == account_id), None)
+        account = self.get(f"/accounts/{account_id}")
+        return account if isinstance(account, dict) else None
 
     def deposits(self, account_id: str) -> list[dict]:
         return self.get(f"/accounts/{account_id}/deposits") or []

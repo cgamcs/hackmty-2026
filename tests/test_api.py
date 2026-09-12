@@ -5,7 +5,7 @@ import unittest
 from datetime import date, timedelta
 from unittest.mock import patch
 
-from backend.app import StressRequest, TENANTS, resolve_tenant, simulate_stress
+from backend.app import StressRequest, TENANTS, dashboard, resolve_tenant, simulate_stress
 from financial_engine import BusinessSnapshot, CashFlow
 
 
@@ -17,6 +17,28 @@ class FinancialApiTests(unittest.TestCase):
         with patch.dict(os.environ, {"DEMO_TENANT_SLUG": "roble"}, clear=True):
             tenant = resolve_tenant()
         self.assertEqual(tenant.slug, "roble")
+
+    @patch("backend.app._load_snapshot")
+    def test_dashboard_uses_the_resolved_tenant_snapshot(self, load_snapshot) -> None:
+        snapshot = BusinessSnapshot(
+            as_of=TODAY,
+            current_balance=50_000,
+            historical_flows=[
+                CashFlow(TODAY - timedelta(days=1), 4_000, "sales"),
+                CashFlow(TODAY - timedelta(days=1), -1_500, "operations"),
+            ],
+        )
+        load_snapshot.return_value = (
+            snapshot,
+            {"_id": "server-only-1234", "nickname": "Cuenta operativa"},
+        )
+
+        payload = dashboard(TENANTS["roble"])
+
+        self.assertEqual(payload["business"]["rfc"], "MER210126F09")
+        self.assertEqual(payload["account"]["balance"], 50_000)
+        self.assertEqual(len(payload["forecast"]), 30)
+        self.assertNotIn("server-only-1234", payload["account"]["id"])
 
     @patch("backend.app._load_snapshot")
     def test_stress_endpoint_runs_the_python_engine(self, load_snapshot) -> None:

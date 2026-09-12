@@ -280,7 +280,8 @@ python3 -m venv .venv
 ```
 
 The React development server proxies `/api` to `http://127.0.0.1:8000`, so no frontend
-API URL is required locally. `POST /api/stress` accepts scenario inputs and returns both
+API URL is required locally. `GET /api/dashboard` supplies Dashboard, Business and Forecast
+from the same tenant snapshot. `POST /api/stress` accepts scenario inputs and returns both
 the baseline and stressed 30-day results. The browser never sends a Nessie account ID.
 
 Without Supabase server settings, the API runs in local demo mode and reads the tenant in

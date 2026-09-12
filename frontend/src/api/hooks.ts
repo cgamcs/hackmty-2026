@@ -5,16 +5,17 @@ import { simulateStress } from './client';
 import type { StressRequest } from '@/types';
 
 export function useDashboard() {
-  const accountId = useSession((s) => s.accountId);
+  const email = useSession((state) => state.user?.email);
   return useQuery({
-    queryKey: ['dashboard', accountId],
-    queryFn: () => fetchDashboard(accountId),
+    queryKey: ['dashboard', email],
+    queryFn: fetchDashboard,
   });
 }
 
 export function useStressSimulation(request: StressRequest) {
+  const email = useSession((state) => state.user?.email);
   return useQuery({
-    queryKey: ['stress', request],
+    queryKey: ['stress', email, request],
     queryFn: () => simulateStress(request),
     placeholderData: (previous) => previous,
   });
