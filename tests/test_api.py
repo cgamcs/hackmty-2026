@@ -14,11 +14,25 @@ running server.
 
 from __future__ import annotations
 
+import base64
+import os
 import unittest
 from datetime import date, timedelta
+from unittest.mock import patch
 
+from backend.crypto import decrypt_xml, encrypt_xml
 from backend.stress import StressRequest, risk_level, run_stress
 from financial_engine import BusinessSnapshot, CashFlow
+
+
+class CryptoKeyTests(unittest.TestCase):
+    def test_unpadded_32_byte_base64_key_is_accepted(self):
+        key = base64.b64encode(b"k" * 32).decode().rstrip("=")
+        with patch.dict(os.environ, {"CFDI_ENC_KEY": key}):
+            xml = '<cfdi:Comprobante Total="1.00"/>'
+            encrypted = encrypt_xml(xml, "TEST-UUID")
+            self.assertEqual(decrypt_xml(encrypted, "TEST-UUID"), xml)
+
 
 TODAY = date(2026, 9, 12)
 

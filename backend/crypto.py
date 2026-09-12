@@ -17,6 +17,7 @@ query.
 
 from __future__ import annotations
 
+import binascii
 import os
 import secrets
 from pathlib import Path
@@ -57,7 +58,14 @@ def _key() -> bytes:
         raise RuntimeError(
             "CFDI_ENC_KEY not set. Generate one with:\n"
             "  python3 -c 'import backend.crypto as c; print(c.generate_key_b64())'")
-    key = base64.b64decode(raw)
+    # A 32-byte key is commonly copied without Base64's trailing "=". Accept that
+    # harmless representation and restore the padding locally; malformed characters
+    # still fail with a useful configuration error.
+    padded = raw + "=" * (-len(raw) % 4)
+    try:
+        key = base64.b64decode(padded, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise RuntimeError("CFDI_ENC_KEY must be valid Base64") from exc
     if len(key) != KEY_BYTES:
         raise RuntimeError(f"CFDI_ENC_KEY must decode to {KEY_BYTES} bytes, got {len(key)}")
     return key
