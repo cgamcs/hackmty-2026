@@ -163,6 +163,42 @@ For a business on the Operación plan:
 
 Because recurring SaaS revenue exceeds origination commissions per client, our primary business incentive remains focused on subscription retention rather than pushing unnecessary loans.
 
+### 1.4 Go-To-Market — First 50 Customers
+
+Our beachhead is not chosen by size but by pain certainty: 18,000 SMBs in the Monterrey metropolitan area, 10–50 employees, distribution and light industrial. Rigid biweekly payroll against 30-to-60-day collection cycles makes the liquidity gap structural, not occasional. We are physically in that market.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    CHANNEL STRATEGY — GO-TO-MARKET                  │
+├──────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  CHANNEL 1: External Accountants (Primary)                          │
+│  └─ Hold CFDI XML for 20–40 clients                                 │
+│  └─ 20% revenue share (low CAC, high trust)                         │
+│  └─ 10 accountant partnerships = first 50 customers                 │
+│                                                                      │
+│  CHANNEL 2: Bank Co-Sell                                            │
+│  └─ Bank owns enterprise relationship                               │
+│  └─ Pre-qualified origination funnel                                │
+│  └─ Lower default probability via gap classifier                    │
+│                                                                      │
+│  CHANNEL 3: Industry Chambers (CAINTRA, COPARMEX)                   │
+│  └─ Working clinic demo: "See payroll 30 days ahead"                │
+│  └─ Near-zero cost, high density of decision-makers                 │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Channel 1 — External accountants (primary).** Every formal SMB in our SOM already routes its CFDI through an external accountant who holds the SAT XMLs for 20–40 clients and enjoys the owner's trust. Today that accountant delivers financials on the 5th of the following month and is therefore structurally reactive. We make him proactive. **His onboarding is our onboarding** — he already has the files we need, so acquisition cost collapses to a recurring revenue share (assumed 20% of subscription) instead of ad spend. Ten accountant partnerships address our first 50 accounts.
+
+**Channel 2 — Bank co-sell.** The bank already owns the enterprise-account relationship and already pays high CAC on SMB lending. We are not a competitor but a pre-qualified origination funnel with structurally lower default probability, because our gap classifier filters out businesses in persistent deficit before any credit is shown. Distribution is the bank's; underwriting quality is ours.
+
+**Channel 3 — Industry chambers.** CAINTRA Nuevo León and COPARMEX concentrate our exact profile. Format: a working clinic — "see your payroll 30 days before it happens" — demoed live against the digital twin. Near-zero cost, high density of decision-makers.
+
+**Funnel economics.** At $899 MXN/mo on the Operación plan and an assumed 24-month retention, LTV ≈ $21,576 MXN. Because Channel 1 pays out only as a share of realized revenue, CAC is variable rather than fixed, so the unit economics close without external capital.
+
+*Assumptions flagged: 20% accountant revenue share and 24-month retention are modelling assumptions, not observed data.*
+
 ---
 
 ## 2. The idea
