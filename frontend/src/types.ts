@@ -1,0 +1,163 @@
+// Domain types mirroring the FastAPI contract described in CONCEPT.md.
+// CFDI = obligation layer, Nessie = settlement layer.
+
+export type ISODate = string;
+
+/** Phase 6 — the single most important piece of intelligence. */
+export type GapKind = 'NONE' | 'TIMING' | 'STRUCTURAL';
+
+export type RiskLevel = 'BAJO' | 'MEDIO' | 'ALTO' | 'CRITICO';
+
+/** Obligation rigidity (CONCEPT §7): payroll and taxes are hard, supplier PPD has slack. */
+export type Rigidity = 'hard' | 'slack';
+
+export type ObligationKind = 'PAYROLL' | 'TAXES' | 'SUPPLIER' | 'RENT';
+
+export interface Business {
+  name: string;
+  rfc: string;
+  owner: string;
+  ownerInitials: string;
+}
+
+export interface OperatingAccount {
+  id: string;
+  nickname: string;
+  bank: string;
+  /** Real Nessie `account.balance`. */
+  balance: number;
+  balanceAt: string;
+  live: boolean;
+}
+
+/** Open receivable: CFDI emitido, MetodoPago="PPD", no matching deposit. */
+export interface Receivable {
+  id: string;
+  folio: string;
+  client: string;
+  amount: number;
+  dueDate: ISODate;
+  /** Real DSO learned from CFDI ↔ deposit matching. */
+  dsoDays: number;
+  /** Client historically pays early when asked. */
+  accelerable: boolean;
+}
+
+/** Open payable or fixed obligation (CFDI recibido PPD, nómina, SAT, Nessie bill). */
+export interface Payable {
+  id: string;
+  payee: string;
+  reference: string;
+  kind: ObligationKind;
+  amount: number;
+  dueDate: ISODate;
+  rigidity: Rigidity;
+  /** Days it can move without breaking a legal date (0 for hard). */
+  slackDays: number;
+}
+
+/** Obligation already settled this cycle (Nessie withdrawal/bill matched). */
+export interface SettledObligation {
+  id: string;
+  payee: string;
+  kind: ObligationKind;
+  amount: number;
+  date: ISODate;
+}
+
+export interface ForecastPoint {
+  date: ISODate;
+  expected: number;
+  /** p20 inflow, discounted collection probability. */
+  pessimistic: number;
+}
+
+/** Phase 5 — "an obligation cannot be covered", first failure wins. */
+export interface Breach {
+  date: ISODate;
+  obligation: Payable;
+  /** Pessimistic balance on the breach date. */
+  balance: number;
+  shortfall: number;
+  daysUntil: number;
+}
+
+export type LadderRung = 'ACCELERATE' | 'SHIFT' | 'BUFFER' | 'CREDIT';
+
+export interface LadderStep {
+  rung: LadderRung;
+  /** "1 · Cobranza" */
+  short: string;
+  /** "Adelantar cobranza A-4501" */
+  title: string;
+  /** Sentence fragment: "adelantando A-4501 2 días" */
+  phrase: string;
+  closes: number;
+  available: boolean;
+  /** Needed to close the gap, cheapest first. */
+  applied: boolean;
+}
+
+export interface Ladder {
+  steps: LadderStep[];
+  /** Gap left after rungs 1–3. */
+  residual: number;
+  /** Credit amount = residual + safety margin (0 when not needed). */
+  creditAmount: number;
+  /** STRUCTURAL DEFICIT: lending into it harms the business. */
+  creditDeclined: boolean;
+  adjustedMin: number | null;
+}
+
+export interface Movement {
+  id: string;
+  date: ISODate;
+  description: string;
+  amount: number;
+  type: 'deposit' | 'purchase' | 'withdrawal';
+  cfdi?: string;
+}
+
+export interface DailyFlow {
+  date: ISODate;
+  inflow: number;
+  outflow: number;
+}
+
+export interface AgingBucket {
+  label: string;
+  amount: number;
+}
+
+export interface DashboardData {
+  today: ISODate;
+  business: Business;
+  account: OperatingAccount;
+  accounts: OperatingAccount[];
+  healthScore: number;
+  resilienceScore: number;
+  collection: { collectedPct: number; receivablePct: number; overduePct: number };
+  income30: { total: number; changePct: number; cash: number; cfdi: number };
+  expense30: { total: number; changePct: number; lines: { label: string; amount: number }[] };
+  cfdi: {
+    receivableTotal: number;
+    receivableCount: number;
+    payableTotal: number;
+    payableCount: number;
+    aging: AgingBucket[];
+  };
+  cashflow: DailyFlow[];
+  movementsCount: number;
+  movements: Movement[];
+  receivables: Receivable[];
+  payables: Payable[];
+  settled: SettledObligation[];
+  forecast: ForecastPoint[];
+  bufferAvailable: number;
+  // Engine output
+  breach: Breach | null;
+  gap: GapKind;
+  risk: RiskLevel;
+  residualPct: number;
+  ladder: Ladder;
+}

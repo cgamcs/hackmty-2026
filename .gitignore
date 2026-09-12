@@ -41,9 +41,13 @@ next-env.d.ts
 
 .atl/
 .claude/
-# python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-.pytest_cache/
+
+# Internal planning docs
+frontend.md
+
+# Claude Design handoff bundle (reference only)
+frontend/makeupDesign/
+
+# nested dependencies / builds
+node_modules/
+frontend/dist/
