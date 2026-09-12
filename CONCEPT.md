@@ -349,10 +349,15 @@ to an `account_id`, and only the last four digits are kept for display.
 ```
 upload ZIP
   -> unzip in FastAPI (the ZIP itself is never stored)
-  -> each XML to Storage:  cfdi/{tenant_id}/{uuid}.xml
+  -> each XML to Storage:  bucket "cfdi", object "{tenant_id}/{uuid}.xml"
   -> parse ONCE
   -> extracted fields to invoices
 ```
+
+The bucket name is **not** part of the object path. Uploading to `cfdi/{tenant_id}/...`
+inside the `cfdi` bucket would make the first path segment the literal string `cfdi`
+instead of the tenant id, and the storage RLS policy — which authorises on that first
+segment — would stop isolating tenants.
 
 **Never parse on read.** Queries hit Postgres; Storage is not touched again in normal
 operation. A dashboard that parses on every load re-reads hundreds of objects per page

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/api/hooks';
-import { supabase } from '@/lib/supabase';
+import { logout as apiLogout } from '@/lib/auth';
 import { useSession } from '@/store/session';
 import { Icon } from './ui';
 
@@ -174,7 +174,7 @@ function UserMenu({ initials }: { initials: string }) {
   const navigate = useNavigate();
 
   async function signOut() {
-    await supabase?.auth.signOut();
+    await apiLogout().catch(() => {});   // clear locally even if the call fails
     setUser(null);
     navigate('/login', { replace: true });
   }

@@ -16,7 +16,7 @@ export const useSession = create<SessionState>()(
   persist(
     (set) => ({
       user: null,
-      accountId: '5bc495a1-3d2b-4b15-8dcd-334691933d48',
+      accountId: '',
       range: 30,
       setUser: (user) => set({ user }),
       setAccount: (accountId) => set({ accountId }),

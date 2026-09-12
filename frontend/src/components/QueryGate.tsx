@@ -37,10 +37,12 @@ export function QueryGate({ children }: { children: (data: DashboardData) => Rea
         <div className="eyebrow">Primer paso</div>
         <h2 className="m-0 text-[34px] font-normal tracking-[-.03em]">Conecta tu negocio</h2>
         <p className="max-w-[560px] text-[15px] leading-relaxed text-ash">
-          Sube tus CFDI y conecta tu cuenta operativa. Con eso proyectamos tus próximos 30 días y te avisamos si la nómina está en riesgo.
+          Guarda tu razón social, conecta tu cuenta operativa, sube tus CFDI y sincroniza. Hasta
+          entonces no mostramos ninguna cifra: un tablero armado con datos incompletos se ve
+          igual de convincente y no lo es.
         </p>
-        <Link to="/settings/cfdi" className="flex h-11 items-center rounded-full bg-ember px-[22px] text-[13.5px] font-medium">
-          Subir CFDI y conectar banco
+        <Link to="/settings" className="flex h-11 items-center rounded-full bg-ember px-[22px] text-[13.5px] font-medium">
+          Ir a ajustes
         </Link>
       </div>
     );
