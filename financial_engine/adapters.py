@@ -3,15 +3,42 @@ from __future__ import annotations
 import calendar
 import json
 import re
+import sys
+from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 
 from .cfdi_parser import open_receivables_from_cfdi
-from .models import BusinessSnapshot, CashFlow, Obligation
+from .models import BusinessSnapshot, CashFlow, Obligation, Receivable
 
 
 FOLIO_PATTERN = re.compile(r"\b([A-Z]\d{4,})\b", re.IGNORECASE)
+
+
+def find_company_account(client: Any, company_name: str) -> dict[str, Any] | None:
+    """Find the operating account for a company in the API key's own sandbox."""
+
+    normalized = company_name.casefold().strip()
+    customer = next(
+        (
+            item
+            for item in client.customers()
+            if " ".join(
+                part for part in (item.get("first_name", ""), item.get("last_name", "")) if part
+            ).casefold().startswith(normalized)
+        ),
+        None,
+    )
+    if customer is None:
+        return None
+    accounts = [
+        item for item in client.accounts() if item.get("customer_id") == customer.get("_id")
+    ]
+    return next(
+        (item for item in accounts if item.get("nickname") == "Cuenta Operativa"),
+        accounts[0] if accounts else None,
+    )
 
 
 def _as_date(value: str | date | None) -> date | None:
@@ -120,6 +147,8 @@ def snapshot_from_sources(
                     payee=str(bill.get("payee", "Obligación")),
                     category=category,
                     hard_deadline=is_hard,
+                    slack_days=int(bill.get("slack_days", 0)),
+                    relationship_cost=float(bill.get("relationship_cost", 0)),
                 )
             )
 
@@ -133,7 +162,9 @@ def snapshot_from_sources(
     receivables = [
         type(item)(
             id=item.id,
-            due_date=item.due_date,
+            # An overdue, still-open PPD invoice remains collectible. Put it on
+            # day one instead of silently dropping it outside the forecast.
+            due_date=max(item.due_date, earliest),
             amount=item.amount,
             customer=item.customer,
             collection_probability=item.collection_probability,
@@ -150,6 +181,104 @@ def snapshot_from_sources(
         receivables=receivables,
         available_cash_buffer=available_cash_buffer,
         safety_buffer=safety_buffer,
+    )
+
+
+def snapshot_from_live_nessie(
+    *,
+    account_id: str,
+    cfdi_directory: str | Path,
+    owner_rfc: str,
+    as_of: date | None = None,
+    horizon_days: int = 30,
+    safety_buffer: float = 0.0,
+    available_cash_buffer: float = 0.0,
+    client: Any | None = None,
+) -> BusinessSnapshot:
+    """Fetch one PyME's current data from Nessie and join its CFDI documents.
+
+    `client` is injectable so tests never need network access. In the application,
+    account_id and CFDI directory must be resolved from the authenticated tenant.
+    """
+
+    if client is None:
+        from engine.nessie import Nessie
+
+        try:
+            client = Nessie()
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "Nessie API_KEY is missing. Set the API_KEY environment variable "
+                "or add API_KEY=... to the repository .env file."
+            ) from exc
+    account = client.account(account_id)
+    if account is None:
+        raise ValueError(f"Nessie account not found: {account_id}")
+    deposits = client.deposits(account_id)
+    purchases = client.purchases(account_id)
+    withdrawals = client.withdrawals(account_id)
+    bills = client.bills(account_id)
+    snapshot = snapshot_from_sources(
+        account=account,
+        deposits=deposits,
+        purchases=purchases,
+        withdrawals=withdrawals,
+        bills=bills,
+        cfdi_directory=cfdi_directory,
+        owner_rfc=owner_rfc,
+        as_of=as_of or date.today(),
+        horizon_days=horizon_days,
+        safety_buffer=safety_buffer,
+        available_cash_buffer=available_cash_buffer,
+    )
+
+    # Use the reconciliation and learned-terms pipeline delivered by the CFDI/API
+    # builder. It performs reference + fuzzy matching and learns each client's
+    # observed payment lag instead of assuming net-30 for everybody.
+    engine_dir = Path(__file__).resolve().parents[1] / "engine"
+    if str(engine_dir) not in sys.path:
+        sys.path.insert(0, str(engine_dir))
+    from cfdi_parser import parse_dir
+    from config import COLLECTION_PROBABILITY
+    from reconcile import reconcile
+    from terms import apply_terms, learn_terms
+
+    batch = parse_dir(cfdi_directory)
+    reconciled = reconcile(batch, deposits, purchases)
+    learned_terms = learn_terms(reconciled.matched)
+    tuned = apply_terms(reconciled, learned_terms)
+    tomorrow = (as_of or date.today()) + timedelta(days=1)
+    receivables = [
+        Receivable(
+            id=item.invoice.reference,
+            due_date=max(item.expected_date, tomorrow),
+            amount=item.amount,
+            customer=item.invoice.counterparty_name,
+            collection_probability=COLLECTION_PROBABILITY,
+            earliest_collection_date=tomorrow,
+            early_payment_discount=0.02,
+        )
+        for item in tuned.open_receivables
+    ]
+    open_payables = [
+        Obligation(
+            id=f"cfdi:{item.invoice.reference}",
+            due_date=max(item.expected_date, tomorrow),
+            amount=item.amount,
+            payee=item.invoice.counterparty_name,
+            category="supplier",
+            hard_deadline=False,
+            # CONCEPT.md: silence is zero slack. A later persistence layer can
+            # populate this only from proven supplier tolerance.
+            slack_days=0,
+            relationship_cost=0.0,
+        )
+        for item in tuned.open_payables
+    ]
+    return replace(
+        snapshot,
+        receivables=receivables,
+        obligations=[*snapshot.obligations, *open_payables],
     )
 
 

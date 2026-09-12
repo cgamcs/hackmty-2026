@@ -336,14 +336,18 @@ class FinancialEngine:
             (
                 item
                 for item in snapshot.obligations
-                if not item.hard_deadline and item.due_date <= breach.date
+                if (
+                    not item.hard_deadline
+                    and item.slack_days > 0
+                    and item.due_date <= breach.date
+                )
             ),
             key=lambda item: -item.amount,
         )
         for obligation in movable:
             new_date = min(
                 snapshot.as_of + timedelta(days=self.horizon_days),
-                obligation.due_date + timedelta(days=7),
+                obligation.due_date + timedelta(days=min(7, obligation.slack_days)),
             )
             shifted = replace(obligation, due_date=new_date)
             working_snapshot = replace(
@@ -359,9 +363,12 @@ class FinancialEngine:
                     rank=rank,
                     action="shift_obligation",
                     title=f"Negocia una nueva fecha con {obligation.payee}",
-                    description=f"Mueve {obligation.id} siete días, al {new_date.isoformat()}.",
+                    description=(
+                        f"Mueve {obligation.id} dentro de su holgura comprobada, "
+                        f"al {new_date.isoformat()}."
+                    ),
                     cash_impact=round(obligation.amount, 2),
-                    estimated_cost=0.0,
+                    estimated_cost=round(obligation.relationship_cost, 2),
                     resolves_breach=result.breach is None,
                     parameters={"obligation_id": obligation.id, "new_date": new_date.isoformat()},
                 )
@@ -504,6 +511,8 @@ class FinancialEngine:
         for item in snapshot.obligations:
             if item.amount <= 0:
                 raise ValueError(f"obligation {item.id} must have a positive amount")
+            if item.slack_days < 0:
+                raise ValueError(f"obligation {item.id} cannot have negative slack")
         for item in snapshot.receivables:
             if item.amount <= 0:
                 raise ValueError(f"receivable {item.id} must have a positive amount")

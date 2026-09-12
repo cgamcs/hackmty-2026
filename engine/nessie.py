@@ -16,11 +16,18 @@ BASE = "https://prod-api.nessieisreal.com"
 
 
 def load_key() -> str:
-    env = Path(__file__).parent.parent / ".env"
-    for line in env.read_text().splitlines():
-        if line.startswith("API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip("'")
-    raise RuntimeError("API_KEY not found in .env")
+    candidates = (
+        Path(__file__).parent.parent / ".env",
+        Path(__file__).parent / ".env",
+    )
+    for env in candidates:
+        if not env.is_file():
+            continue
+        for line in env.read_text().splitlines():
+            name, separator, value = line.partition("=")
+            if separator and name.strip() == "API_KEY":
+                return value.strip().strip('"').strip("'")
+    raise RuntimeError("API_KEY not found in repository .env or engine/.env")
 
 
 class Nessie:
@@ -41,6 +48,9 @@ class Nessie:
 
     def accounts(self) -> list[dict]:
         return self.get("/accounts") or []
+
+    def customers(self) -> list[dict]:
+        return self.get("/customers") or []
 
     def account(self, account_id: str) -> dict | None:
         return next((a for a in self.accounts() if a["_id"] == account_id), None)

@@ -37,6 +37,8 @@ class Obligation:
     payee: str
     category: str = "supplier"
     hard_deadline: bool = False
+    slack_days: int = 0
+    relationship_cost: float = 0.0
 
 
 @dataclass(frozen=True)

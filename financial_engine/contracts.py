@@ -37,6 +37,8 @@ def snapshot_from_dict(payload: dict[str, Any]) -> BusinessSnapshot:
                 payee=item["payee"],
                 category=item.get("category", "supplier"),
                 hard_deadline=bool(item.get("hard_deadline", False)),
+                slack_days=int(item.get("slack_days", 0)),
+                relationship_cost=float(item.get("relationship_cost", 0)),
             )
             for item in payload.get("obligations", [])
         ],
