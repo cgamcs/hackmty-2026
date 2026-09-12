@@ -1,10 +1,17 @@
 import type { DashboardData, StressRequest, StressSimulationResponse } from '@/types';
 import { buildScenario } from '@/mock/scenario';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+// Empty by default: vite.config.ts proxies /api to the backend, so requests stay
+// same-origin and the session cookie is plainly first-party — no CORS preflight, no
+// SameSite edge cases. Set VITE_API_BASE_URL only to point at a backend elsewhere.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
-/** True when running without the FastAPI backend (seeded demo scenario). */
-export const isDemo = !API_BASE;
+/** Seeded demo scenario, with no backend at all. Opt in with VITE_DEMO=1.
+ *
+ * This used to be inferred from a missing VITE_API_BASE_URL, which meant forgetting to
+ * set an env var silently served mock data through the whole app — every page looked
+ * populated while nothing was ever saved. Demo mode is now explicit. */
+export const isDemo = import.meta.env.VITE_DEMO === '1';
 
 /**
  * GET /api/sme/{account_id}. The browser never holds a Nessie key — the backend does.
@@ -90,25 +97,16 @@ export const connectAccount = (accountNumber: string) =>
     account_number: accountNumber,
   });
 
-/** Accepts the SAT bulk-download ZIP or individual XML files. */
-export async function uploadCfdi(files: FileList | File[]): Promise<{ parsed: number; skipped: number; rfc: string }> {
-  const list = Array.from(files);
-  let parsed = 0;
-  let skipped = 0;
-  let rfc = '';
-  // One request per file keeps a single malformed XML from failing the whole batch.
-  for (const file of list) {
-    const form = new FormData();
-    form.append('file', file);
-    const res = await api<{ parsed: number; skipped: number; rfc: string }>('/api/cfdi/upload', {
-      method: 'POST',
-      body: form,
-    });
-    parsed += res.parsed;
-    skipped += res.skipped;
-    rfc = res.rfc || rfc;
-  }
-  return { parsed, skipped, rfc };
+/** Accepts the SAT bulk-download ZIP or individual XML files. Sent as ONE batch: the server
+ *  infers the tenant's RFC across all documents, which a lone XML cannot tell it. A malformed
+ *  XML is skipped server-side, so it does not fail the batch. */
+export function uploadCfdi(files: FileList | File[]) {
+  const form = new FormData();
+  for (const file of Array.from(files)) form.append('files', file);
+  return api<{ parsed: number; skipped: number; rfc: string }>('/api/cfdi/upload', {
+    method: 'POST',
+    body: form,
+  });
 }
 
 export const fetchObligations = () => api<ObligationRow[]>('/api/obligations');

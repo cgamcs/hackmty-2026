@@ -57,7 +57,9 @@ def _key() -> bytes:
         raise RuntimeError(
             "CFDI_ENC_KEY not set. Generate one with:\n"
             "  python3 -c 'import backend.crypto as c; print(c.generate_key_b64())'")
-    key = base64.b64decode(raw)
+    # Tolerate the URL-safe alphabet and stripped "=" padding (secrets.token_urlsafe(32), or
+    # an editor eating the trailing "="). The length check below is the real guard.
+    key = base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4))
     if len(key) != KEY_BYTES:
         raise RuntimeError(f"CFDI_ENC_KEY must decode to {KEY_BYTES} bytes, got {len(key)}")
     return key
