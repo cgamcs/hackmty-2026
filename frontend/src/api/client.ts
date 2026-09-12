@@ -1,18 +1,7 @@
 import type { DashboardData, StressRequest, StressSimulationResponse } from '@/types';
 import { buildScenario } from '@/mock/scenario';
-import { supabase } from '@/lib/supabase';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
-async function authHeaders(): Promise<HeadersInit> {
-  if (!supabase) return { 'Content-Type': 'application/json' };
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
 
 /** True when running without the FastAPI backend (seeded demo scenario). */
 export const isDemo = !API_BASE;
@@ -37,7 +26,7 @@ export async function simulateStress(request: StressRequest): Promise<StressSimu
   const res = await fetch(`${API_BASE ?? ''}/api/stress`, {
     method: 'POST',
     credentials: 'include',
-    headers: await authHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
   if (!res.ok) {

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell, RequireAuth } from '@/components/AppShell';
-import { supabase } from '@/lib/supabase';
+import { isDemo } from '@/api/client';
+import { fetchMe } from '@/lib/auth';
 import { useSession } from '@/store/session';
 import Inicio from '@/pages/Inicio';
 import Login from '@/pages/Login';
@@ -13,21 +14,25 @@ import Recovery from '@/pages/Recovery';
 import Funding from '@/pages/Funding';
 import CfdiConfig from '@/pages/CfdiConfig';
 
-/** Keep the store in sync with the Supabase session when auth is configured. */
-function useSupabaseSession() {
+/** Rehydrate the store from the session cookie on load.
+ *
+ * The cookie is httpOnly, so its presence cannot be read from JavaScript — the only way
+ * to know whether a session is live is to ask the server.
+ */
+function useServerSession() {
   const setUser = useSession((s) => s.setUser);
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user.email ? { email: data.session.user.email } : null));
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user.email ? { email: session.user.email } : null);
-    });
-    return () => data.subscription.unsubscribe();
+    if (isDemo) return;
+    let cancelled = false;
+    fetchMe()
+      .then((me) => { if (!cancelled) setUser(me ? { email: me.email } : null); })
+      .catch(() => { if (!cancelled) setUser(null); });
+    return () => { cancelled = true; };
   }, [setUser]);
 }
 
 export default function App() {
-  useSupabaseSession();
+  useServerSession();
 
   return (
     <Routes>

@@ -58,3 +58,7 @@ frontend/dist/
 *credentials.env
 *.env
 !.env.example
+
+# python build artifacts
+__pycache__/
+*.py[cod]
