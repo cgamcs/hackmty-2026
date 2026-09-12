@@ -234,11 +234,12 @@ end $$;
 -- that cannot be applied to it. Querying cash_flows_daily directly therefore returns
 -- every tenant's daily totals.
 --
--- So it is never queried directly. This wrapper is: a regular view, security_invoker on,
--- filtered by the session tenant. Point the application at `daily_flows`, and treat
--- `cash_flows_daily` as internal.
+-- So it is never queried directly. This wrapper runs with its owner's read privilege but
+-- has a security barrier and an explicit current_tenant() filter. `security_invoker=true`
+-- cannot be used here: PostgreSQL would then require app_api to read the unfiltered
+-- aggregate underneath, defeating the revoke below.
 create or replace view daily_flows
-with (security_invoker = true) as
+with (security_barrier = true, security_invoker = false) as
 select day, net, inflow, outflow, movements
 from cash_flows_daily
 where tenant_id = current_tenant();

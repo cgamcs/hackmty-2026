@@ -18,7 +18,7 @@ cd backend && uvicorn main:app --reload --port 8000
 | `DEMO_MODE` | `1` only for a local demo — see below |
 | `COOKIE_SECURE` | set `0` only for local HTTP; leave unset/`1` behind HTTPS |
 
-Migrations, in order and as the table owner (`tsdbadmin`): `db/tiger/001` → … → `010`
+Migrations, in order and as the table owner (`tsdbadmin`): `db/tiger/001` → … → `011`
 (`006` supersedes `005`, `010` supersedes `009`). Then, as `app_api`, run
 `python3 backend/check_tenants.py`: it must print `ok`. It replays registration, session lookup,
 the audit trigger and a CFDI shared by two tenants in a rolled-back transaction.
