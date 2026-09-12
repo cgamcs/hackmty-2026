@@ -38,6 +38,8 @@ next-env.d.ts
 /app/generated/prisma
 
 .env
+.venv/
+__pycache__/
 
 .atl/
 .claude/

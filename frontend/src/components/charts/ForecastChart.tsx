@@ -19,7 +19,7 @@ const GRID = 'rgba(199,214,213,0.2)';
 interface Props {
   data: ForecastPoint[];
   breach: Breach | null;
-  payrollFloor: number;
+  payrollFloor?: number;
 }
 
 /** Dual-band 30-day projection: expected vs pessimistic p20. A single line is not actionable. */
@@ -47,8 +47,7 @@ export function ForecastChart({ data, breach, payrollFloor }: Props) {
           dy={8}
         />
         <YAxis
-          domain={[50000, 750000]}
-          ticks={[50000, 225000, 400000, 575000, 750000]}
+          domain={['auto', 'auto']}
           tickFormatter={(v: number) => `${v / 1000}k`}
           tickLine={false}
           axisLine={false}
@@ -57,13 +56,15 @@ export function ForecastChart({ data, breach, payrollFloor }: Props) {
         />
         <Tooltip content={<ForecastTooltip />} cursor={{ stroke: 'rgba(199,214,213,0.35)', strokeDasharray: '3 3' }} />
         <Area dataKey="band" type="linear" stroke="none" fill="#EF4444" fillOpacity={0.15} isAnimationActive={false} activeDot={false} />
-        <ReferenceLine
-          y={payrollFloor}
-          stroke="rgba(199,214,213,0.5)"
-          strokeWidth={1.2}
-          strokeDasharray="7 6"
-          label={{ value: `PISO DE NÓMINA ${mxn(payrollFloor)}`, position: 'insideTopLeft', fill: '#C7D6D5', fontSize: 9.5, fontFamily: MONO, dy: -16 }}
-        />
+        {payrollFloor !== undefined && Number.isFinite(payrollFloor) && (
+          <ReferenceLine
+            y={payrollFloor}
+            stroke="rgba(199,214,213,0.5)"
+            strokeWidth={1.2}
+            strokeDasharray="7 6"
+            label={{ value: `PISO DE NÓMINA ${mxn(payrollFloor)}`, position: 'insideTopLeft', fill: '#C7D6D5', fontSize: 9.5, fontFamily: MONO, dy: -16 }}
+          />
+        )}
         <Line dataKey="pessimistic" type="linear" stroke="#EF4444" strokeOpacity={0.75} strokeWidth={1.6} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
         <Line dataKey="expected" type="linear" stroke="#C20114" strokeWidth={2.5} dot={false} isAnimationActive={false} />
         {breach && <ReferenceLine x={breach.date} stroke="#EF4444" strokeOpacity={0.55} strokeWidth={1.2} strokeDasharray="5 5" />}
