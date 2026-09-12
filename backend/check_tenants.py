@@ -74,6 +74,9 @@ def run(conn) -> None:
                             (tenant_id,))["n"]
         assert audited >= 4, "008: the audit trigger did not record the writes"
 
+    # The preceding loop leaves tenant B in scope. Switch back to A so this assertion
+    # reaches the UUID constraint instead of being (correctly) rejected by A/B RLS.
+    _scope(conn, tenant_id=a[0])
     try:
         with conn.transaction():                                         # savepoint
             execute(conn, INVOICE_UPSERT, ("", a[0], 1))
