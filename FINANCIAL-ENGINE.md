@@ -79,8 +79,7 @@ No requiere paquetes externos:
 
 ```bash
 python3 -m unittest discover -s tests -v
-PYTHONPATH=. python3 examples/demo.py
-PYTHONPATH=. python3 examples/analyze_mocks.py
+PYTHONPATH=. python3 examples/analyze_mocks.py bajio
 ```
 
 ## Integración recomendada
@@ -99,9 +98,10 @@ obtiene la empresa desde la sesión autenticada y arma el snapshot con datos de 
 
 ### Mocks incluidos
 
-`snapshot_from_mock_files(slug, project_root)` integra los XML de `mocks/out/cfdi`, el
-manifiesto de Nessie y las series definidas en `mocks/scenarios.py`. Los slugs disponibles
-son `esperanza`, `bajio` y `roble`. Esta ruta es completamente local y no requiere la API key.
+`snapshot_from_mock_files(slug, project_root)` integra únicamente los datos de la PyME
+seleccionada: sus XML de `mocks/out/cfdi`, su cuenta de Nessie y sus obligaciones. Los datos
+de otras empresas nunca entran al `BusinessSnapshot` analizado. Los slugs disponibles son
+`esperanza`, `bajio` y `roble`. Esta ruta es completamente local y no requiere la API key.
 
 Para respuestas reales de Nessie, `snapshot_from_sources(...)` acepta directamente las
 respuestas de cuenta, depósitos, compras, retiros y bills, además del directorio CFDI. El
