@@ -41,3 +41,13 @@ next-env.d.ts
 
 .atl/
 .claude/
+
+# Internal planning docs
+frontend.md
+
+# Claude Design handoff bundle (reference only)
+frontend/makeupDesign/
+
+# nested dependencies / builds
+node_modules/
+frontend/dist/
