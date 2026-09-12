@@ -269,6 +269,34 @@ Run one demo SMB against the current Nessie API data:
 PYTHONPATH=. python3 examples/analyze_live.py bajio
 ```
 
+### Running the Stress Lab API
+
+Install the backend dependencies once and start FastAPI from the repository root:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn backend.app:app --reload
+```
+
+The React development server proxies `/api` to `http://127.0.0.1:8000`, so no frontend
+API URL is required locally. `POST /api/stress` accepts scenario inputs and returns both
+the baseline and stressed 30-day results. The browser never sends a Nessie account ID.
+
+Without Supabase server settings, the API runs in local demo mode and reads the tenant in
+`DEMO_TENANT_SLUG` (`bajio` by default). With authentication enabled, configure:
+
+```text
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+```
+
+The server validates the bearer token with Supabase and resolves the business from the
+trusted `app_metadata.tenant_slug` claim. As a temporary alternative, a private
+`TENANT_USER_MAP_JSON` environment variable can map a Supabase user ID or email to one of
+`esperanza`, `bajio`, or `roble`. This mapping belongs on the server and must never use a
+value supplied by the browser.
+
 The default output is a complete human-readable report with the 30-day table. Alternative
 formats are:
 
