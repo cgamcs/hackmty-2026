@@ -8,7 +8,7 @@ credit terms.
 
 # How long a client takes to pay a PPD invoice. CFDI records that payment is deferred
 # but never when it is due — terms are commercial, not fiscal — so this is our default.
-# Per-client overrides belong in Supabase, keyed by the client's RFC.
+# Per-client overrides live in the `terms` table, keyed by the client's RFC.
 NET_TERMS_DAYS = 30
 
 # Liquidity projection window.

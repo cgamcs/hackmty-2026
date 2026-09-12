@@ -1,30 +1,48 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell, RequireAuth } from '@/components/AppShell';
-import { supabase } from '@/lib/supabase';
+import { isDemo } from '@/api/client';
+import { fetchMe } from '@/lib/auth';
 import { useSession } from '@/store/session';
 import Inicio from '@/pages/Inicio';
 import Login from '@/pages/Login';
 import MiNegocio from '@/pages/MiNegocio';
-import Pending from '@/pages/Pending';
 import Prediccion from '@/pages/Prediccion';
 import StressLab from '@/pages/StressLab';
+import Recovery from '@/pages/Recovery';
+import Funding from '@/pages/Funding';
+import CfdiConfig from '@/pages/CfdiConfig';
+import Ajustes from '@/pages/Ajustes';
 
-/** Keep the store in sync with the Supabase session when auth is configured. */
-function useSupabaseSession() {
+/** Rehydrate the store from the session cookie on load.
+ *
+ * The cookie is httpOnly, so its presence cannot be read from JavaScript — the only way
+ * to know whether a session is live is to ask the server.
+ */
+function useServerSession() {
   const setUser = useSession((s) => s.setUser);
+  const setAccount = useSession((s) => s.setAccount);
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user.email ? { email: data.session.user.email } : null));
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user.email ? { email: session.user.email } : null);
-    });
-    return () => data.subscription.unsubscribe();
-  }, [setUser]);
+    if (isDemo) return;
+    let cancelled = false;
+    fetchMe()
+      .then((me) => {
+        if (cancelled) return;
+        setUser(me ? { email: me.email } : null);
+        setAccount(me?.account_id ?? '');
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUser(null);
+          setAccount('');
+        }
+      });
+    return () => { cancelled = true; };
+  }, [setAccount, setUser]);
 }
 
 export default function App() {
-  useSupabaseSession();
+  useServerSession();
 
   return (
     <Routes>
@@ -36,10 +54,10 @@ export default function App() {
           <Route path="/business" element={<MiNegocio />} />
           <Route path="/forecast" element={<Prediccion />} />
           <Route path="/stress" element={<StressLab />} />
-          <Route path="/recovery" element={<Pending view="recovery" />} />
-          <Route path="/funding" element={<Pending view="funding" />} />
-          <Route path="/settings/cfdi" element={<Pending view="cfdi" />} />
-          <Route path="/settings" element={<Pending view="settings" />} />
+          <Route path="/recovery" element={<Recovery />} />
+          <Route path="/funding" element={<Funding />} />
+          <Route path="/settings/cfdi" element={<CfdiConfig />} />
+          <Route path="/settings" element={<Ajustes />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

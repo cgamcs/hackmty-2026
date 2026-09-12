@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '@/components/TopNav';
 import { Icon } from '@/components/ui';
-import { supabase } from '@/lib/supabase';
+import { fetchMe, login as apiLogin, register as apiRegister } from '@/lib/auth';
+import { isDemo } from '@/api/client';
 import { useSession } from '@/store/session';
 
 type Mode = 'signin' | 'signup';
@@ -10,6 +11,7 @@ type Mode = 'signin' | 'signup';
 export default function Login() {
   const user = useSession((s) => s.user);
   const setUser = useSession((s) => s.setUser);
+  const setAccount = useSession((s) => s.setAccount);
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
@@ -30,49 +32,22 @@ export default function Login() {
     setNotice(null);
     setBusy(true);
     try {
-      if (supabase) {
-        const { data, error: authError } =
-          mode === 'signin'
-            ? await supabase.auth.signInWithPassword({ email, password })
-            : await supabase.auth.signUp({ email, password });
-        if (authError) throw authError;
-        if (!data.session) {
-          setNotice('Revisa tu correo para confirmar la cuenta.');
-          return;
-        }
+      let sessionEmail = email;
+      if (!isDemo) {
+        if (mode === 'signin') await apiLogin(email, password);
+        else await apiRegister(email, password);
+        const me = await fetchMe();
+        if (!me) throw new Error('No pudimos iniciar la sesión. Intenta de nuevo.');
+        sessionEmail = me.email;
+        setAccount(me.account_id ?? '');
       }
-      setUser({ email });
+      setUser({ email: sessionEmail });
       navigate(mode === 'signup' ? '/settings/cfdi' : from, { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? 'Correo o contraseña incorrectos. Intenta de nuevo.' : 'No pudimos iniciar sesión.');
+      setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión.');
     } finally {
       setBusy(false);
     }
-  }
-
-  async function magicLink() {
-    setError(null);
-    if (!email) {
-      setError('Escribe tu correo para enviarte el enlace.');
-      return;
-    }
-    if (!supabase) {
-      setNotice('Modo demo: el enlace de un solo uso requiere Supabase configurado.');
-      return;
-    }
-    const { error: otpError } = await supabase.auth.signInWithOtp({ email });
-    if (otpError) setError('No pudimos enviar el enlace. Intenta de nuevo.');
-    else setNotice(`Te enviamos un enlace a ${email}.`);
-  }
-
-  async function resetPassword() {
-    setError(null);
-    if (!email) {
-      setError('Escribe tu correo para restablecer la contraseña.');
-      return;
-    }
-    if (supabase) await supabase.auth.resetPasswordForEmail(email);
-    setNotice(`Si ${email} tiene cuenta, te enviamos instrucciones.`);
   }
 
   const inputCls =
@@ -128,7 +103,7 @@ export default function Login() {
 
           <form onSubmit={submit} className="flex flex-col rounded-[30px] border border-ash/14 bg-dim/16 px-6 py-8 sm:px-10 sm:py-[38px]" noValidate>
             <h2 className="m-0 text-[26px] font-medium tracking-[-.02em]">{mode === 'signin' ? 'Entra a tu panel' : 'Crea tu cuenta'}</h2>
-            <div className="mt-2 text-[13px] text-dim">Una cuenta por PyME · autenticación Supabase</div>
+            <div className="mt-2 text-[13px] text-dim">Una cuenta por PyME · sesión del lado del servidor</div>
 
             <div className="mt-[30px] flex flex-col gap-5">
               <label className="block">
@@ -164,11 +139,6 @@ export default function Login() {
                 </span>
                 <span className="text-[13px] text-ash">Mantener sesión</span>
               </label>
-              {mode === 'signin' && (
-                <button type="button" onClick={resetPassword} className="text-[13px] text-[#E0303F] hover:text-ghost">
-                  ¿Olvidaste tu contraseña?
-                </button>
-              )}
             </div>
 
             {error && (
@@ -188,16 +158,6 @@ export default function Login() {
               className="mt-[26px] h-[54px] rounded-2xl bg-ember text-[15px] font-medium hover:bg-ember/85 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? 'Entrando…' : mode === 'signin' ? 'Entrar' : 'Crear cuenta'}
-            </button>
-
-            <div className="mt-[26px] flex items-center gap-3.5">
-              <div className="h-px flex-1 bg-ash/16" />
-              <span className="eyebrow !text-[10px]">O continúa con</span>
-              <div className="h-px flex-1 bg-ash/16" />
-            </div>
-
-            <button type="button" onClick={magicLink} className="mt-5 h-[50px] rounded-2xl border border-ash/20 text-sm text-ash hover:bg-ash/6">
-              Correo de un solo uso (magic link)
             </button>
 
             <div className="mt-[30px] flex items-start gap-[11px] border-t border-ash/14 pt-[22px]">

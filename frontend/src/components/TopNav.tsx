@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/api/hooks';
-import { supabase } from '@/lib/supabase';
+import { logout as apiLogout } from '@/lib/auth';
 import { useSession } from '@/store/session';
 import { Icon } from './ui';
 
@@ -171,11 +171,13 @@ export function TopNav() {
 
 function UserMenu({ initials }: { initials: string }) {
   const setUser = useSession((s) => s.setUser);
+  const setAccount = useSession((s) => s.setAccount);
   const navigate = useNavigate();
 
   async function signOut() {
-    await supabase?.auth.signOut();
+    await apiLogout().catch(() => {});   // clear locally even if the call fails
     setUser(null);
+    setAccount('');
     navigate('/login', { replace: true });
   }
 
