@@ -53,3 +53,8 @@ frontend/makeupDesign/
 # nested dependencies / builds
 node_modules/
 frontend/dist/
+
+# credenciales — nunca commitear
+*credentials.env
+*.env
+!.env.example
