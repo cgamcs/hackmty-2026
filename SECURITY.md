@@ -8,16 +8,27 @@ Everything below is implemented and runnable, not aspirational.
 
 Every RLS policy in `db/tiger/001_schema.sql` was **inert** on first deployment.
 
-PostgreSQL does not apply row level security to a table's owner, and never applies it to
-a superuser. Tiger Cloud issues `tsdbadmin`, a superuser that owns everything created
-with it — so the schema was created by, and the API connected as, a role RLS does not
-constrain. The policies existed, validated, and filtered nothing. No error, no warning:
-cross-tenant reads simply succeeded.
+PostgreSQL does not apply row level security to a table's **owner**. Tiger Cloud issues
+`tsdbadmin`, which owns everything created with it — so the schema was created by, and the
+API connected as, a role RLS did not constrain. The policies existed, validated, and
+filtered nothing. No error, no warning: cross-tenant reads simply succeeded.
+
+Measured, rather than assumed: on Tiger Cloud `tsdbadmin` is `superuser=false,
+bypassrls=false`. It bypassed RLS purely by owning the tables. An earlier version of this
+document claimed it was a superuser; that was wrong, and the distinction matters because
+it is what makes the fix below sufficient.
 
 Fixed in `003_security.sql` by two changes, neither sufficient alone:
 
 1. `FORCE ROW LEVEL SECURITY` on every table, so the owner is subject to its own policies.
-2. A non-superuser `app_api` role, because `FORCE` still does not constrain a superuser.
+2. A separate `app_api` role, so the API is not the owner either.
+
+One consequence surfaced during registration: with `FORCE` on, nothing can insert a tenant
+row before `app.tenant_id` is set, and `INSERT ... RETURNING` must also satisfy the SELECT
+policy. `006_register_fix.sql` resolves it by pre-generating the tenant id and declaring it
+before inserting — so there is **no privileged function anywhere in the schema**. The first
+attempt (`005`) used `SECURITY DEFINER` and did not work precisely because the owner is not
+a superuser.
 
 **`DATABASE_URL` must name `app_api`, never `tsdbadmin`.** That single line is the
 difference between the policies working and being decoration.

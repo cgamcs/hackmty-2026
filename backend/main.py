@@ -43,6 +43,7 @@ import snapshot as snapshot_mod                       # noqa: E402
 import sync as sync_mod                               # noqa: E402
 from crypto import encrypt_xml, hash_password, verify_password   # noqa: E402
 from db import connect, execute, fetch_all, fetch_one, tenant_tx  # noqa: E402
+from psycopg import errors as psycopg_errors                      # noqa: E402
 from financial_engine import FinancialEngine                      # noqa: E402
 from financial_engine.contracts import snapshot_from_dict         # noqa: E402
 from nessie import Nessie                             # noqa: E402
@@ -96,11 +97,16 @@ def _set_cookie(response: Response, token: str) -> None:
 def current_tenant_id(wcb_session: str | None = Cookie(default=None)) -> str | None:
     if not wcb_session:
         return None
-    with connect() as conn:
-        row = fetch_one(conn, "select tenant_for_session(%s) as id", (wcb_session,))
-    # A scalar SQL function still returns one row when its value is NULL. Checking only
-    # the row would turn an expired token into the literal tenant id "None" and fail
-    # later with an invalid-UUID database error instead of returning 401.
+    with connect() as conn, conn.transaction():
+        # tenants is RLS-filtered and no tenant is known yet; tenants_by_session
+        # (db/tiger/007) exposes only the row owned by this token's user.
+        execute(conn, "select set_config('app.session_token', %s, true)", (wcb_session,))
+        row = fetch_one(conn, """
+            select t.id
+            from sessions s
+            join tenants t on t.owner_id = s.user_id
+            where s.token = %s and s.expires_at > now()
+        """, (wcb_session,))
     return str(row["id"]) if row and row["id"] else None
 
 
@@ -120,13 +126,15 @@ def register(response: Response, payload: dict):
         raise HTTPException(400, "Correo requerido y contraseña de al menos 8 caracteres.")
 
     with connect() as conn:
-        if fetch_one(conn, "select 1 from users where email = %s", (email,)):
-            raise HTTPException(409, "Ese correo ya está registrado.")
-        created = fetch_one(
-            conn,
-            "select * from register_user_tenant(%s, %s, %s)",
-            (email, hash_password(password), razon_social or email),
-        )
+        # register_tenant pre-generates and transaction-scopes the new tenant id so both
+        # the INSERT and RETURNING path satisfy RLS. See db/tiger/006_register_fix.sql.
+        try:
+            created = fetch_one(
+                conn, "select * from register_tenant(%s, %s, %s)",
+                (email, hash_password(password), razon_social))
+        except psycopg_errors.UniqueViolation as exc:
+            # The UNIQUE constraint is the real guard; checking first would still race.
+            raise HTTPException(409, "Ese correo ya está registrado.") from exc
         token = _new_session(conn, str(created["user_id"]))
 
     _set_cookie(response, token)
@@ -256,19 +264,24 @@ def update_profile(payload: dict, tenant_id: str = Depends(require_tenant)):
 
 
 @app.post("/api/cfdi/upload")
-async def upload_cfdi(file: UploadFile = File(...),
+async def upload_cfdi(files: list[UploadFile] = File(...),
                       tenant_id: str = Depends(require_tenant)):
-    """Accept a ZIP or a single XML, parse once, store parsed fields plus ciphertext."""
-    raw = await file.read()
-    documents: list[tuple[str, str]] = []
+    """Accept ZIPs and/or XMLs as one batch, parse once, store parsed fields plus ciphertext.
 
-    if zipfile.is_zipfile(BytesIO(raw)):
-        with zipfile.ZipFile(BytesIO(raw)) as zf:
-            for name in zf.namelist():
-                if name.lower().endswith(".xml") and not name.startswith("__MACOSX"):
-                    documents.append((name, zf.read(name).decode("utf-8", "replace")))
-    else:
-        documents.append((file.filename or "cfdi.xml", raw.decode("utf-8", "replace")))
+    One batch, not one request per file: the tenant's RFC is inferred as the one present in
+    every document, and a lone XML carries two RFCs with equal counts — per-file uploads
+    guessed it by coin flip and could file every issued invoice as received.
+    """
+    documents: list[tuple[str, str]] = []
+    for file in files:
+        raw = await file.read()
+        if zipfile.is_zipfile(BytesIO(raw)):
+            with zipfile.ZipFile(BytesIO(raw)) as zf:
+                for name in zf.namelist():
+                    if name.lower().endswith(".xml") and not name.startswith("__MACOSX"):
+                        documents.append((name, zf.read(name).decode("utf-8", "replace")))
+        else:
+            documents.append((file.filename or "cfdi.xml", raw.decode("utf-8", "replace")))
 
     if not documents:
         raise HTTPException(400, "No encontramos XML en el archivo.")
@@ -285,24 +298,31 @@ async def upload_cfdi(file: UploadFile = File(...),
     for name, text in documents:
         by_uuid[Path(name).name] = text
 
-    stored = 0
+    stored = unstamped = 0
     with tenant_tx(tenant_id) as conn:
-        if batch.own_rfc:
-            execute(conn, "update tenants set rfc = coalesce(rfc, %s) where id = %s",
-                    (batch.own_rfc, tenant_id))
+        known = fetch_one(conn, "select rfc from tenants where id = %s", (tenant_id,))["rfc"]
+        own_rfc = known or batch.own_rfc
+        if own_rfc and not known:
+            execute(conn, "update tenants set rfc = %s where id = %s", (own_rfc, tenant_id))
         for inv in batch.invoices:
+            if not inv.uuid.strip():
+                # No TimbreFiscalDigital, so no folio fiscal: not a stamped CFDI, and with no
+                # key it would overwrite every other unstamped document.
+                unstamped += 1
+                continue
+            # A later, smaller upload must not re-guess the RFC the first batch established.
+            inv.direction = "issued" if inv.emisor_rfc == own_rfc else "received"
             xml_text = by_uuid.get(inv.source_file, "")
-            # The UUID is the folio fiscal and the primary key: re-uploading the same SAT
-            # export updates rather than duplicating. Without this, the receivable book
-            # silently doubles and the product recommends collecting money that does not
-            # exist.
+            # (tenant_id, uuid) is the primary key: re-uploading the same SAT export updates
+            # rather than duplicating, or the receivable book silently doubles. It is per
+            # tenant because issuer and receiver both hold the same CFDI (db/tiger/010).
             execute(conn, """
                 insert into invoices
                   (uuid, tenant_id, serie, folio, direction, tipo, metodo_pago,
                    forma_pago, counterparty_rfc, counterparty_name, fecha, due_date,
                    subtotal, total, xml_enc)
                 values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                on conflict (uuid) do update set
+                on conflict (tenant_id, uuid) do update set
                   serie = excluded.serie, folio = excluded.folio,
                   direction = excluded.direction, metodo_pago = excluded.metodo_pago,
                   counterparty_rfc = excluded.counterparty_rfc,
@@ -316,7 +336,7 @@ async def upload_cfdi(file: UploadFile = File(...),
                   encrypt_xml(xml_text, inv.uuid) if xml_text else None))
             stored += 1
 
-    return {"parsed": stored, "skipped": len(batch.skipped), "rfc": batch.own_rfc}
+    return {"parsed": stored, "skipped": len(batch.skipped) + unstamped, "rfc": own_rfc}
 
 
 @app.post("/api/sync")

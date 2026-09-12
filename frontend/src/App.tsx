@@ -21,24 +21,14 @@ import Ajustes from '@/pages/Ajustes';
  */
 function useServerSession() {
   const setUser = useSession((s) => s.setUser);
-  const setAccount = useSession((s) => s.setAccount);
   useEffect(() => {
     if (isDemo) return;
     let cancelled = false;
     fetchMe()
-      .then((me) => {
-        if (cancelled) return;
-        setUser(me ? { email: me.email } : null);
-        setAccount(me?.account_id ?? '');
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUser(null);
-          setAccount('');
-        }
-      });
+      .then((me) => { if (!cancelled) setUser(me ? { email: me.email } : null); })
+      .catch(() => { if (!cancelled) setUser(null); });
     return () => { cancelled = true; };
-  }, [setAccount, setUser]);
+  }, [setUser]);
 }
 
 export default function App() {

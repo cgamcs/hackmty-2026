@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Brand } from '@/components/TopNav';
 import { Icon } from '@/components/ui';
-import { fetchMe, login as apiLogin, register as apiRegister } from '@/lib/auth';
+import { login as apiLogin, register as apiRegister } from '@/lib/auth';
 import { isDemo } from '@/api/client';
 import { useSession } from '@/store/session';
 
@@ -11,9 +12,9 @@ type Mode = 'signin' | 'signup';
 export default function Login() {
   const user = useSession((s) => s.user);
   const setUser = useSession((s) => s.setUser);
-  const setAccount = useSession((s) => s.setAccount);
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
 
   const [mode, setMode] = useState<Mode>('signin');
@@ -32,16 +33,13 @@ export default function Login() {
     setNotice(null);
     setBusy(true);
     try {
-      let sessionEmail = email;
       if (!isDemo) {
         if (mode === 'signin') await apiLogin(email, password);
         else await apiRegister(email, password);
-        const me = await fetchMe();
-        if (!me) throw new Error('No pudimos iniciar la sesión. Intenta de nuevo.');
-        sessionEmail = me.email;
-        setAccount(me.account_id ?? '');
       }
-      setUser({ email: sessionEmail });
+      // Also covers a session that expired without an explicit logout.
+      queryClient.clear();
+      setUser({ email });
       navigate(mode === 'signup' ? '/settings/cfdi' : from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos iniciar sesión.');

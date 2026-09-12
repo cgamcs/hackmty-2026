@@ -12,7 +12,6 @@ import {
   useUploadCfdi,
 } from '@/api/hooks';
 import { mxn } from '@/lib/format';
-import { useSession } from '@/store/session';
 
 /**
  * Integration settings — the only place data enters the product.
@@ -79,7 +78,7 @@ const inputCls =
   'h-[46px] w-full rounded-xl border border-ash/18 bg-dim/10 px-4 text-[14px] text-ghost outline-none placeholder:text-dim focus:border-ember';
 
 export default function Ajustes() {
-  const { data: setup, isPending } = useSetupStatus();
+  const { data: setup, isPending, error: setupError } = useSetupStatus();
   const { data: obligations } = useObligations();
 
   const profile = useSaveProfile();
@@ -87,8 +86,6 @@ export default function Ajustes() {
   const upload = useUploadCfdi();
   const sync = useRunSync();
   const saveOb = useSaveObligation();
-
-  const setAccount = useSession((st) => st.setAccount);
 
   const [razonSocial, setRazonSocial] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -99,20 +96,14 @@ export default function Ajustes() {
     if (setup?.razon_social && !razonSocial) setRazonSocial(setup.razon_social);
   }, [setup?.razon_social]);   // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The dashboard is addressed as /api/sme/{account_id}, and the browser never sees the
-  // account list to choose from — so the id has to come back from the server.
-  useEffect(() => {
-    if (setup?.account_id) setAccount(setup.account_id);
-  }, [setup?.account_id, setAccount]);
-
   if (isDemo) {
     return (
       <section className="card flex flex-col items-start gap-4 p-8">
         <div className="eyebrow">Ajustes</div>
         <h1 className="m-0 text-[32px] font-normal tracking-[-.03em]">Modo demo</h1>
         <p className="m-0 max-w-[560px] text-[14.5px] leading-relaxed text-ash">
-          Estás viendo el escenario sembrado. Para conectar un negocio real, define{' '}
-          <code className="rounded bg-dim/20 px-1.5 py-0.5 text-[13px]">VITE_API_BASE_URL</code> y
+          Estás viendo el escenario sembrado; nada se guarda. Para conectar un negocio real,
+          quita <code className="rounded bg-dim/20 px-1.5 py-0.5 text-[13px]">VITE_DEMO=1</code> y
           vuelve a cargar.
         </p>
       </section>
@@ -141,6 +132,11 @@ export default function Ajustes() {
       </header>
 
       {isPending && <div className="card h-32 animate-pulse" />}
+      {setupError && (
+        <div role="alert" className="card p-6 text-[13.5px] text-alto">
+          {setupError.message}
+        </div>
+      )}
 
       {steps && (
         <div className="grid gap-4 sm:gap-[18px] lg:grid-cols-2">
@@ -198,11 +194,7 @@ export default function Ajustes() {
               <button
                 type="button"
                 disabled={accountNumber.length < 8 || connect.isPending}
-                onClick={() =>
-                  connect.mutate(accountNumber, {
-                    onSuccess: (res) => setAccount(res.account_id),
-                  })
-                }
+                onClick={() => connect.mutate(accountNumber)}
                 className="h-[46px] flex-none rounded-xl bg-ember px-5 text-[13.5px] font-medium disabled:opacity-50"
               >
                 {connect.isPending ? 'Conectando…' : 'Conectar'}

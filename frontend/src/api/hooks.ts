@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSession } from '@/store/session';
 import {
   connectAccount,
   fetchDashboard,
@@ -14,21 +13,23 @@ import {
 } from './client';
 import type { StressRequest } from '@/types';
 
+/** The account id comes from the server, derived from the session cookie. A copy kept in
+ *  localStorage outlived logout and pointed the next user at the previous tenant (403). */
 export function useDashboard() {
-  const accountId = useSession((state) => state.accountId);
+  const setup = useSetupStatus();
+  const accountId = setup.data?.account_id ?? '';
   return useQuery({
     queryKey: ['dashboard', accountId],
     queryFn: () => fetchDashboard(accountId),
-    enabled: isDemo || Boolean(accountId),
+    // Demo mode has no setup call; otherwise wait for the server to name the account.
+    enabled: isDemo || setup.isFetched,
   });
 }
 
 export function useStressSimulation(request: StressRequest) {
-  const accountId = useSession((state) => state.accountId);
   return useQuery({
-    queryKey: ['stress', accountId, request],
+    queryKey: ['stress', request],
     queryFn: () => simulateStress(request),
-    enabled: isDemo || Boolean(accountId),
     placeholderData: (previous) => previous,
   });
 }

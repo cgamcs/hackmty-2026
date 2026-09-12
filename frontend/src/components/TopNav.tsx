@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDashboard } from '@/api/hooks';
 import { logout as apiLogout } from '@/lib/auth';
 import { useSession } from '@/store/session';
@@ -171,13 +172,15 @@ export function TopNav() {
 
 function UserMenu({ initials }: { initials: string }) {
   const setUser = useSession((s) => s.setUser);
-  const setAccount = useSession((s) => s.setAccount);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   async function signOut() {
     await apiLogout().catch(() => {});   // clear locally even if the call fails
+    // Queries are keyed per endpoint, not per user: drop them so this account's data
+    // never renders for the next one.
+    queryClient.clear();
     setUser(null);
-    setAccount('');
     navigate('/login', { replace: true });
   }
 
