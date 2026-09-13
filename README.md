@@ -61,7 +61,7 @@ Row-Level Security (RLS).
 
 text
 backend/             FastAPI, authentication, TigerData access and API orchestration
-db/tiger/            Ordered TigerData migrations (001 through 012)
+db/tiger/            Ordered TigerData migrations (001 through 013)
 engine/              Nessie client, CFDI parsing, reconciliation and learned terms
 financial_engine/    Forecast, scores, stress scenarios and recovery decisions
 frontend/            React application
@@ -115,7 +115,7 @@ must continue using the restricted DATABASE_URL.
 ## Database setup
 
 Run every SQL file in `db/tiger/` in numeric order, from `001_schema.sql` through
-`012_cash_buffer.sql`, using the Tiger Cloud SQL editor or an administrative
+`013_obligation_bill_unique.sql`, using the Tiger Cloud SQL editor or an administrative
 `tsdbadmin` connection.
 
 Migration 003 creates app_api with a placeholder password when the role does not yet
@@ -133,6 +133,7 @@ Important migration notes:
 - 011 exposes only tenant-filtered daily flows while keeping the raw continuous
   aggregate private.
 - `012` stores each company's cash buffer, which the recovery ladder draws on before credit.
+- `013` removes duplicated obligations and keeps one per Nessie bill, so re-syncing is safe.
 
 After applying the migrations, validate the live schema through the restricted application
 role. The check creates two temporary tenants in one transaction and always rolls it back:
@@ -144,7 +145,7 @@ PYTHONPATH=backend:. .venv/bin/python backend/check_tenants.py
 Expected output:
 
 text
-ok: registration, sessions, shared CFDI upsert, audit trigger, RLS isolation
+ok: registration, sessions, shared CFDI upsert, audit trigger, RLS isolation, cash buffer, obligation re-sync
 
 
 ## Install dependencies

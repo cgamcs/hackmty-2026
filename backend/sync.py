@@ -101,6 +101,23 @@ def sync_flows(conn, tenant_id: str, api: Nessie, account_id: str) -> dict[str, 
     return counts
 
 
+# One row per Nessie bill per tenant (db/tiger/013). A second copy would subtract every
+# payroll and rent twice in the forecast. A re-sync refreshes what Nessie owns (payee,
+# amount, day) and leaves what the owner confirmed (rigidity, slack, cost, source) alone.
+# Kind is not refreshed either: flipping a confirmed row to payroll or tax would violate the
+# immovable-kinds CHECK.
+OBLIGATION_UPSERT = """
+    insert into obligations
+      (tenant_id, bill_id, payee, amount, day_of_month, kind,
+       rigidity, slack_days, relationship_cost, source)
+    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    on conflict (tenant_id, bill_id) do update
+      set payee = excluded.payee,
+          amount = excluded.amount,
+          day_of_month = excluded.day_of_month
+"""
+
+
 def sync_obligations(conn, tenant_id: str, api: Nessie, account_id: str) -> int:
     """Pre-fill the hard-date form from Nessie bills.
 
@@ -120,13 +137,7 @@ def sync_obligations(conn, tenant_id: str, api: Nessie, account_id: str) -> int:
             int(bill.get("recurring_date") or 1),
             kind, "hard" if hard else "slack", 0, 0, "detected"))
 
-    execute_many(conn, """
-        insert into obligations
-          (tenant_id, bill_id, payee, amount, day_of_month, kind,
-           rigidity, slack_days, relationship_cost, source)
-        values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        on conflict do nothing
-    """, rows)
+    execute_many(conn, OBLIGATION_UPSERT, rows)
     return len(rows)
 
 

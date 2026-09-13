@@ -4,7 +4,8 @@
 
 Each step replays a path that broke once the schema met a second tenant: registration
 privileges (009/010), session-to-tenant lookup under RLS (007), the audit trigger (008),
-the same CFDI UUID in two tenants (010), and the per-tenant cash buffer (012). It all runs in ONE transaction that is always rolled
+the same CFDI UUID in two tenants (010), the per-tenant cash buffer (012), and re-syncing an
+obligation without duplicating it (013). It all runs in ONE transaction that is always rolled
 back, so it leaves nothing behind and is safe against the live database.
 """
 
@@ -15,7 +16,8 @@ import secrets
 import psycopg
 
 from crypto import hash_password
-from db import connect, execute, fetch_one
+from db import connect, execute, fetch_all, fetch_one
+from sync import OBLIGATION_UPSERT
 
 INVOICE_UPSERT = """
     insert into invoices (uuid, tenant_id, direction, tipo, fecha, total)
@@ -103,6 +105,21 @@ def run(conn) -> None:
     else:
         raise AssertionError("012: a negative cash buffer was accepted")
 
+    # 013: re-syncing the same Nessie bill refreshes it instead of adding a second row, and
+    # never overwrites the slack the owner confirmed. Uses the sync's own statement.
+    bill = f"check-bill-{secrets.token_hex(4)}"
+    first = (b[0], bill, "Renta Local", 8_000.0, 5, "rent", "slack", 0, 0, "detected")
+    execute(conn, OBLIGATION_UPSERT, first)
+    execute(conn, "update obligations set slack_days = 3, source = 'user' where bill_id = %s",
+            (bill,))
+    execute(conn, OBLIGATION_UPSERT, (*first[:3], 9_000.0, *first[4:]))
+    synced = fetch_all(conn, "select amount, slack_days, source from obligations where bill_id = %s",
+                       (bill,))
+    assert len(synced) == 1, f"013: re-sync duplicated an obligation ({len(synced)} rows)"
+    assert float(synced[0]["amount"]) == 9_000 and synced[0]["slack_days"] == 3 \
+        and synced[0]["source"] == "user", \
+        "013: re-sync must refresh the amount and keep the owner's confirmed slack"
+
     execute(conn, "delete from sessions where token = %s", (a[1],))         # logout
 
 
@@ -113,7 +130,7 @@ def main() -> None:
         finally:
             conn.rollback()
     print("ok: registration, sessions, shared CFDI upsert, audit trigger, RLS isolation, "
-          "cash buffer")
+          "cash buffer, obligation re-sync")
 
 
 if __name__ == "__main__":
