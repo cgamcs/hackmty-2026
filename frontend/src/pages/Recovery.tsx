@@ -180,7 +180,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
                   <div className="mt-1 text-[11.5px] text-dim">residual + {Math.round(CREDIT_MARGIN * 100)}% margen</div>
                   <button
                     type="button"
-                    onClick={() => navigate('/funding')}
+                    onClick={() => navigate(`/funding?amount=${creditAmount}`)}
                     className="mt-4 h-9 w-full rounded-full bg-ember px-[18px] text-[12.5px] font-medium hover:bg-ember/85"
                   >
                     Comparar ofertas en Funding →

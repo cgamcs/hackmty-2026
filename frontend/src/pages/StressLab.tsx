@@ -128,10 +128,18 @@ export default function StressLab() {
 
           <article className="card flex h-[clamp(260px,35vw,410px)] flex-col px-4 pb-[22px] pt-[26px] sm:px-[30px]">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <h2 className="m-0 text-[17px] font-medium">Balance proyectado bajo estrés</h2>
+              <div className="flex items-center gap-2.5">
+                <h2 className="m-0 text-[17px] font-medium">Balance proyectado bajo estrés</h2>
+                {simulation.isFetching && (
+                  <span className="flex items-center gap-1.5 rounded-full bg-ember/12 px-2.5 py-1 text-[10.5px] font-medium text-ember">
+                    <span className="size-1.5 animate-pulse rounded-full bg-ember" />
+                    Calculando…
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-[18px] text-[11.5px] text-dim"><span className="flex items-center gap-[7px]"><span className="h-[2.5px] w-4 rounded-sm bg-ember" />Esperado</span><span className="flex items-center gap-[7px]"><span className="h-[2.5px] w-4 rounded-sm bg-alto" />Pesimista p20</span></div>
             </div>
-            <div className="min-h-0 flex-1"><ForecastChart data={forecast} breach={breach} /></div>
+            <div className={`min-h-0 flex-1 transition-opacity duration-200 ${simulation.isFetching ? 'opacity-40' : 'opacity-100'}`}><ForecastChart data={forecast} breach={breach} /></div>
           </article>
 
           {breach ? (

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { DashboardData } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { Meter, SegmentedRange } from '@/components/ui';
@@ -56,7 +57,14 @@ export default function Funding() {
 function FundingView({ d }: { d: DashboardData }) {
   const { ladder } = d;
 
-  const [amount, setAmount] = useState(ladder.creditAmount || 150000);
+  // Recovery links here with ?amount=<residual + margin> once its own toggles have
+  // settled on a figure — that number reflects the peldaños the tenant actually enabled,
+  // which ladder.creditAmount (computed server-side, all rungs on) does not.
+  const [searchParams] = useSearchParams();
+  const requestedAmount = Number(searchParams.get('amount'));
+  const [amount, setAmount] = useState(
+    requestedAmount > 0 ? requestedAmount : ladder.creditAmount || 150000,
+  );
   const [term, setTerm] = useState<Term>(30);
   const [purpose, setPurpose] = useState<Purpose>('bridge');
   const [selected, setSelected] = useState<string | null>(null);
@@ -106,6 +114,14 @@ function FundingView({ d }: { d: DashboardData }) {
                   id="credit-amount" type="number" min={10000} max={1000000} step={5000}
                   value={amount}
                   onChange={(e) => { setAmount(Number(e.target.value)); setSelected(null); }}
+                  onFocus={(e) => {
+                    // Select the whole value on focus so the next keystroke replaces it
+                    // instead of inserting before/after whatever was already there — the
+                    // browser places the caret from the click on its own mouseup right
+                    // after this fires, so the select has to happen one tick later.
+                    const el = e.currentTarget;
+                    requestAnimationFrame(() => el.select());
+                  }}
                   className="w-full rounded-2xl border border-ash/16 bg-dim/10 py-3 pl-8 pr-4 font-mono text-[15px] focus:border-ember/60 focus:outline-none"
                 />
               </div>
