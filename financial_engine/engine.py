@@ -285,20 +285,22 @@ class FinancialEngine:
         working_snapshot = snapshot
         residual_breach = breach
         rank = 1
+        # Only a receivable with an earliest collection date may be pulled forward. None
+        # means the client cannot credibly be asked to pay early (an erratic or unknown
+        # payer); reading it as "tomorrow" proposed collections that would not happen.
         eligible = sorted(
             (
                 item
                 for item in snapshot.receivables
-                if (item.earliest_collection_date or snapshot.as_of + timedelta(days=1))
-                <= breach.date
+                if item.earliest_collection_date is not None
+                and item.earliest_collection_date <= breach.date
                 and item.due_date > snapshot.as_of
             ),
             key=lambda item: (item.early_payment_discount, -item.amount),
         )
         for receivable in eligible:
             collection_day = max(
-                snapshot.as_of + timedelta(days=1),
-                receivable.earliest_collection_date or snapshot.as_of + timedelta(days=1),
+                snapshot.as_of + timedelta(days=1), receivable.earliest_collection_date
             )
             accelerated = replace(
                 receivable,
