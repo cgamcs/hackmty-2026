@@ -9,8 +9,18 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 
-from .cfdi_parser import open_receivables_from_cfdi
 from .models import BusinessSnapshot, CashFlow, Obligation, Receivable
+
+# engine/ holds the one CFDI parser, shared with the backend's upload and sync. Its modules
+# import each other by bare name (`from config import ...`), so its directory goes on the path.
+_ENGINE_DIR = Path(__file__).resolve().parents[1] / "engine"
+if str(_ENGINE_DIR) not in sys.path:
+    sys.path.insert(0, str(_ENGINE_DIR))
+
+from cfdi_parser import INGRESO, parse_dir          # noqa: E402
+from config import COLLECTION_PROBABILITY           # noqa: E402
+from reconcile import reconcile                     # noqa: E402
+from terms import apply_terms, learn_terms          # noqa: E402
 
 
 FOLIO_PATTERN = re.compile(r"\b([A-Z]\d{4,})\b", re.IGNORECASE)
@@ -153,25 +163,26 @@ def snapshot_from_sources(
             )
 
     settled = settled_document_ids if settled_document_ids is not None else _settled_folios(deposits)
-    receivables = open_receivables_from_cfdi(
-        cfdi_directory,
-        owner_rfc,
-        settled_document_ids={item.upper() for item in settled},
-    )
+    settled = {item.upper() for item in settled}
     earliest = as_of + timedelta(days=1)
     receivables = [
-        type(item)(
-            id=item.id,
+        Receivable(
+            id=invoice.reference,
             # An overdue, still-open PPD invoice remains collectible. Put it on
             # day one instead of silently dropping it outside the forecast.
-            due_date=max(item.due_date, earliest),
-            amount=item.amount,
-            customer=item.customer,
-            collection_probability=item.collection_probability,
+            due_date=max(invoice.due_date, earliest),
+            amount=invoice.total,
+            customer=invoice.receptor_nombre or invoice.receptor_rfc,
+            collection_probability=COLLECTION_PROBABILITY,
             earliest_collection_date=earliest,
-            early_payment_discount=item.early_payment_discount,
+            early_payment_discount=0.02,
         )
-        for item in receivables
+        for invoice in parse_dir(cfdi_directory).invoices
+        # The caller names the owner, so direction is not re-inferred from the documents.
+        if invoice.emisor_rfc == owner_rfc
+        and invoice.tipo == INGRESO
+        and invoice.metodo_pago == "PPD"
+        and invoice.reference.upper() not in settled
     ]
     return BusinessSnapshot(
         as_of=as_of,
@@ -235,14 +246,6 @@ def snapshot_from_live_nessie(
     # Use the reconciliation and learned-terms pipeline delivered by the CFDI/API
     # builder. It performs reference + fuzzy matching and learns each client's
     # observed payment lag instead of assuming net-30 for everybody.
-    engine_dir = Path(__file__).resolve().parents[1] / "engine"
-    if str(engine_dir) not in sys.path:
-        sys.path.insert(0, str(engine_dir))
-    from cfdi_parser import parse_dir
-    from config import COLLECTION_PROBABILITY
-    from reconcile import reconcile
-    from terms import apply_terms, learn_terms
-
     batch = parse_dir(cfdi_directory)
     reconciled = reconcile(batch, deposits, purchases)
     learned_terms = learn_terms(reconciled.matched)

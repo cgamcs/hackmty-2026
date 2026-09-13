@@ -8,7 +8,6 @@ from .adapters import (
     snapshot_from_mock_files,
     snapshot_from_sources,
 )
-from .cfdi_parser import parse_cfdi, parse_cfdi_directory
 from .models import (
     BusinessSnapshot,
     CashFlow,
@@ -38,6 +37,4 @@ __all__ = [
     "snapshot_from_live_nessie",
     "find_company_account",
     "snapshot_from_sources",
-    "parse_cfdi",
-    "parse_cfdi_directory",
 ]

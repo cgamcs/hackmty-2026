@@ -6,10 +6,10 @@ import unittest
 from financial_engine import (
     FinancialEngine,
     GapType,
-    parse_cfdi_directory,
     snapshot_from_live_nessie,
     snapshot_from_mock_files,
 )
+from cfdi_parser import parse_dir   # engine/, put on the path by financial_engine.adapters
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,14 +44,16 @@ class MockIntegrationTests(unittest.TestCase):
         self.assertTrue(all(item.hard_deadline for item in payroll))
 
     def test_cfdi_parser_recognizes_invoice_and_payroll(self) -> None:
-        documents = parse_cfdi_directory(ROOT / "mocks/out/cfdi/CBA190803M71")
-        invoice = next(item for item in documents if item.document_id == "A4001")
-        payroll = next(item for item in documents if item.document_id == "N7001")
+        batch = parse_dir(ROOT / "mocks/out/cfdi/CBA190803M71")
+        invoice = next(item for item in batch.invoices if item.reference == "A4001")
+        payroll = next(item for item in batch.invoices if item.reference == "N7001")
         manifest = json.loads((ROOT / "mocks/out/seed-manifest.json").read_text())
         expected_amount = manifest["bajio"]["receivables"][0]["amount"]
-        self.assertEqual(invoice.payment_method, "PPD")
+        self.assertEqual(batch.own_rfc, "CBA190803M71")
+        self.assertEqual(invoice.metodo_pago, "PPD")
+        self.assertTrue(invoice.is_receivable)
         self.assertAlmostEqual(invoice.total, expected_amount, places=1)
-        self.assertTrue(payroll.has_payroll_complement)
+        self.assertTrue(payroll.is_payroll)
 
     def test_live_adapter_reads_one_account_from_api_client(self) -> None:
         class FakeNessie:
