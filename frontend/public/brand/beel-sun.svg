@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Beel sun mark</title>
+  <defs>
+    <path id="ray" d="M55 35V27h-5V10a6 6 0 0 1 6-6h16a6 6 0 0 1 6 6v17h-5v8Z"/>
+  </defs>
+  <g fill="#C20114">
+    <use href="#ray"/>
+    <use href="#ray" transform="rotate(45 64 64)"/>
+    <use href="#ray" transform="rotate(90 64 64)"/>
+    <use href="#ray" transform="rotate(135 64 64)"/>
+    <use href="#ray" transform="rotate(180 64 64)"/>
+    <use href="#ray" transform="rotate(225 64 64)"/>
+    <use href="#ray" transform="rotate(270 64 64)"/>
+    <use href="#ray" transform="rotate(315 64 64)"/>
+    <circle cx="64" cy="64" r="27"/>
+  </g>
+</svg>

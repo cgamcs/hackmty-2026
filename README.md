@@ -65,6 +65,7 @@ db/tiger/            Ordered TigerData migrations (001 through 011)
 engine/              Nessie client, CFDI parsing, reconciliation and learned terms
 financial_engine/    Forecast, scores, stress scenarios and recovery decisions
 frontend/            React application
+frontend/public/brand/ Logo variants, sun mark and generated visual concept
 mocks/               Seeded SMB scenarios and CFDI fixtures
 examples/            Command-line demonstrations
 tests/               Unit and integration tests
