@@ -16,10 +16,10 @@ narrower, and the cuts are deliberate.
 
 | Area | Owner | State |
 |------|-------|-------|
-| Mock data (CFDI + Nessie seeding) | — | *done* — mocks/, 3 scenarios verified |
-| CFDI parser | — | *done* — engine/cfdi_parser.py |
-| Reconciliation CFDI ↔️ Nessie | — | *done* — engine/reconcile.py |
-| Learned payment terms | — | *done* — engine/terms.py |
+| Mock data (CFDI + Nessie seeding) | — | done — mocks/, 3 scenarios verified |
+| CFDI parser | — | done — engine/cfdi_parser.py |
+| Reconciliation CFDI ↔️ Nessie | — | done — engine/reconcile.py |
+| Learned payment terms | — | done — engine/terms.py |
 | Forecast engine + breach + classifier | teammate | to build — contract in §6 Phases 3–6 |
 | Supabase schema and wiring | project owner | to build — schema in §4 |
 | React + Tailwind front end | — | to build — views in §7 |
@@ -29,13 +29,13 @@ python3 engine/terms.py, python3 mocks/generate.py.
 
 ### Cut
 
-- *The bank / portfolio view.* It is the Capital One differentiator and costs little —
+- The bank / portfolio view. It is the Capital One differentiator and costs little —
   the same engine in a loop — but the product stands without it and does not stand
   without the business view. Section 5's adapter layer and §6 Phase 8 stay as design
   narrative, not as code.
-- *Any simulated bank connection.* A fake OAuth handshake returning a token nothing
+- Any simulated bank connection. A fake OAuth handshake returning a token nothing
   consumes is theatre. Replaced by account-number entry (§6).
-- *Credit blacklist.* Considered and rejected — see §7.
+- Credit blacklist. Considered and rejected — see §7.
 
 ### The interface between the two builders
 
@@ -73,22 +73,22 @@ Plus, straight from Nessie: account.balance, deposits, purchases, bills.
 └────────────────────────────────────────────────────────────────────────┘
 
 
-*TAM:* 4.8 Million micro, small, and medium enterprises in Mexico [Source: INEGI Censos Económicos / DENUE].
+TAM: 4.8 Million micro, small, and medium enterprises in Mexico [Source: INEGI Censos Económicos / DENUE].
 
-*SAM:* 1.1 Million formal SMBs emitting regular CFDI invoices under deferred payment terms (PPD) and operating enterprise bank accounts.
+SAM: 1.1 Million formal SMBs emitting regular CFDI invoices under deferred payment terms (PPD) and operating enterprise bank accounts.
 
-*SOM:* 18,000 regional SMBs in industrial/distribution hubs (e.g., Nuevo León) with 10–50 employees. These businesses face rigid biweekly payroll dates and 30-to-60-day collection cycles.
+SOM: 18,000 regional SMBs in industrial/distribution hubs (e.g., Nuevo León) with 10–50 employees. These businesses face rigid biweekly payroll dates and 30-to-60-day collection cycles.
 
 ### 1.2 Target Persona & User Journey Map
 
-*Target Persona: Mariana Sada (41)*
+Target Persona: Mariana Sada (41)
 
-- *Role:* Owner & CEO of an electrical supplies distributor in Guadalupe, Nuevo León.
-- *Operations:* 14 employees, biweekly payroll due on the 15th and 30th ($180,000 MXN per cycle). Sells to contractors and hardware stores on net-30 terms (CFDI PPD); buyers pay when convenient.
-- *Pain Point:* On the 11th of every month, Mariana manually checks her bank app, mentally calculating whether incoming collections will cover payroll on the 15th. Her external accountant delivers monthly financials on the 5th of the following month — far too late for operational decision-making. Historically, she has tapped high-interest corporate cards (45% APR) out of urgency.
-- *Core Need:* Forward-looking liquidity visibility and non-predatory intervention — not another pushy loan advertisement.
+- Role: Owner & CEO of an electrical supplies distributor in Guadalupe, Nuevo León.
+- Operations: 14 employees, biweekly payroll due on the 15th and 30th ($180,000 MXN per cycle). Sells to contractors and hardware stores on net-30 terms (CFDI PPD); buyers pay when convenient.
+- Pain Point: On the 11th of every month, Mariana manually checks her bank app, mentally calculating whether incoming collections will cover payroll on the 15th. Her external accountant delivers monthly financials on the 5th of the following month — far too late for operational decision-making. Historically, she has tapped high-interest corporate cards (45% APR) out of urgency.
+- Core Need: Forward-looking liquidity visibility and non-predatory intervention — not another pushy loan advertisement.
 
-*User Journey Map*
+User Journey Map
 
 
 ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
@@ -104,17 +104,17 @@ Plus, straight from Nessie: account.balance, deposits, purchases, bills.
 └──────────────────┘     └──────────────────┘
 
 
-1. *Onboarding:* Mariana uploads a ZIP file of her historical CFDI XMLs from the SAT portal and selects her operating bank account. Zero API keys or sensitive passwords are requested.
+1. Onboarding: Mariana uploads a ZIP file of her historical CFDI XMLs from the SAT portal and selects her operating bank account. Zero API keys or sensitive passwords are requested.
 
-2. *First Glance (Digital Twin):* She visualizes her 30-day cash curve for the first time, featuring expected inflows alongside a conservative (P20) pessimistic band.
+2. First Glance (Digital Twin): She visualizes her 30-day cash curve for the first time, featuring expected inflows alongside a conservative (P20) pessimistic band.
 
-3. *The Breach Alert:* On the 11th, a push notification alerts her: "On the 15th, you are short $25,300 MXN for payroll."
+3. The Breach Alert: On the 11th, a push notification alerts her: "On the 15th, you are short $25,300 MXN for payroll."
 
-4. *The Recovery Path (Relief):* The ladder engine prompts: "You do not need a loan. Collecting invoice A-4471 from Ferretería López 4 days early closes the gap. López historically settles within 4 days."
+4. The Recovery Path (Relief): The ladder engine prompts: "You do not need a loan. Collecting invoice A-4471 from Ferretería López 4 days early closes the gap. López historically settles within 4 days."
 
-5. *The Choice:* Mariana accelerates invoice A-4471. If she prefers not to push that client, the interface reveals three pre-qualified lines of credit ranked strictly by effective cost.
+5. The Choice: Mariana accelerates invoice A-4471. If she prefers not to push that client, the interface reveals three pre-qualified lines of credit ranked strictly by effective cost.
 
-6. *Structural Refusal (Edge Case):* If Mariana's company enters a persistent deficit, the engine refuses to display loans and renders a counterfactual simulation showing how interest payments trigger insolvency.
+6. Structural Refusal (Edge Case): If Mariana's company enters a persistent deficit, the engine refuses to display loans and renders a counterfactual simulation showing how interest payments trigger insolvency.
 
 ### 1.3 Business Model & Revenue Engine (How We Generate Profit)
 
@@ -138,28 +138,28 @@ Our two-sided monetization strategy aligns our incentives with the financial hea
 
 Charging SMBs a monthly fee preserves software neutrality. If the product were free for SMBs, our sole revenue source would be credit origination, destroying our core differentiator: telling businesses not to borrow.
 
-- *Pulso ($399 MXN/mo):* 1 bank account, 30-day forecast, basic breach alerts.
-- *Operación ($899 MXN/mo):* Multi-account CFDI reconciliation, full Recovery Path action ladder, and Stress Lab scenario builder.
-- *Tesorería ($1,899 MXN/mo):* Client-level DSO behavioral tracking, custom counterfactual engines, and Funding Bridge access.
+- Pulso ($399 MXN/mo): 1 bank account, 30-day forecast, basic breach alerts.
+- Operación ($899 MXN/mo): Multi-account CFDI reconciliation, full Recovery Path action ladder, and Stress Lab scenario builder.
+- Tesorería ($1,899 MXN/mo): Client-level DSO behavioral tracking, custom counterfactual engines, and Funding Bridge access.
 
-*Value Anchor:* A single overdraft fee or a 10-day drawdown on a corporate credit card at 45% APR for a $25,000 MXN shortfall costs ~$370 MXN in interest and penalties. Preventing one debt event per month completely pays for the Operación plan.
+Value Anchor: A single overdraft fee or a 10-day drawdown on a corporate credit card at 45% APR for a $25,000 MXN shortfall costs ~$370 MXN in interest and penalties. Preventing one debt event per month completely pays for the Operación plan.
 
-*Unit Economics:* Gross margins exceed 90%. Daily forecast generation requires minimal vectorized operations over 30-day arrays, keeping infrastructure costs to cents per active tenant.
+Unit Economics: Gross margins exceed 90%. Daily forecast generation requires minimal vectorized operations over 30-day arrays, keeping infrastructure costs to cents per active tenant.
 
 #### Bank Side — Pre-Qualified Credit Origination
 
 Banks suffer from high acquisition costs (CAC) and costly underwriting processes for SMB applications that ultimately default or fail qualification. We convert their fixed evaluation overhead into a performance-based funnel.
 
-- *Success Fee (1% – 3% of Funded Loan Amount):* Charged strictly upon loan disbursement, never on leads or raw clicks.
-- *Performance-Linked Rebates:* We accept lower upfront placement fees in exchange for bonuses tied to 6-month repayment performance. Because our gap classifier filters out structural deficits, our applicants carry lower default probabilities.
-- *Enterprise Portfolio View (Long-term B2B SaaS):* Financial institutions pay an annual SaaS fee for an aggregated view of SMB portfolio risk and liquidity alerts across their client base.
+- Success Fee (1% – 3% of Funded Loan Amount): Charged strictly upon loan disbursement, never on leads or raw clicks.
+- Performance-Linked Rebates: We accept lower upfront placement fees in exchange for bonuses tied to 6-month repayment performance. Because our gap classifier filters out structural deficits, our applicants carry lower default probabilities.
+- Enterprise Portfolio View (Long-term B2B SaaS): Financial institutions pay an annual SaaS fee for an aggregated view of SMB portfolio risk and liquidity alerts across their client base.
 
 #### Unit Economics Coherence
 
 For a business on the Operación plan:
 
-- *SaaS Revenue:* $899 × 12 = $10,788 MXN / year (predictable baseline revenue).
-- *Origination Fees:* 1–2 liquidity gaps/year requiring credit at a $50,000 MXN average shortfall yields $1,000 – $2,500 MXN at a 2.5% fee.
+- SaaS Revenue: $899 × 12 = $10,788 MXN / year (predictable baseline revenue).
+- Origination Fees: 1–2 liquidity gaps/year requiring credit at a $50,000 MXN average shortfall yields $1,000 – $2,500 MXN at a 2.5% fee.
 
 Because recurring SaaS revenue exceeds origination commissions per client, our primary business incentive remains focused on subscription retention rather than pushing unnecessary loans.
 
@@ -189,30 +189,171 @@ Our beachhead is not chosen by size but by pain certainty: 18,000 SMBs in the Mo
 └──────────────────────────────────────────────────────────────────────┘
 
 
-*Channel 1 — External accountants (primary).* Every formal SMB in our SOM already routes its CFDI through an external accountant who holds the SAT XMLs for 20–40 clients and enjoys the owner's trust. Today that accountant delivers financials on the 5th of the following month and is therefore structurally reactive. We make him proactive. *His onboarding is our onboarding* — he already has the files we need, so acquisition cost collapses to a recurring revenue share (assumed 20% of subscription) instead of ad spend. Ten accountant partnerships address our first 50 accounts.
+Channel 1 — External accountants (primary). Every formal SMB in our SOM already routes its CFDI through an external accountant who holds the SAT XMLs for 20–40 clients and enjoys the owner's trust. Today that accountant delivers financials on the 5th of the following month and is therefore structurally reactive. We make him proactive. His onboarding is our onboarding — he already has the files we need, so acquisition cost collapses to a recurring revenue share (assumed 20% of subscription) instead of ad spend. Ten accountant partnerships address our first 50 accounts.
 
-*Channel 2 — Bank co-sell.* The bank already owns the enterprise-account relationship and already pays high CAC on SMB lending. We are not a competitor but a pre-qualified origination funnel with structurally lower default probability, because our gap classifier filters out businesses in persistent deficit before any credit is shown. Distribution is the bank's; underwriting quality is ours.
+Channel 2 — Bank co-sell. The bank already owns the enterprise-account relationship and already pays high CAC on SMB lending. We are not a competitor but a pre-qualified origination funnel with structurally lower default probability, because our gap classifier filters out businesses in persistent deficit before any credit is shown. Distribution is the bank's; underwriting quality is ours.
 
-*Channel 3 — Industry chambers.* CAINTRA Nuevo León and COPARMEX concentrate our exact profile. Format: a working clinic — "see your payroll 30 days before it happens" — demoed live against the digital twin. Near-zero cost, high density of decision-makers.
+Channel 3 — Industry chambers. CAINTRA Nuevo León and COPARMEX concentrate our exact profile. Format: a working clinic — "see your payroll 30 days before it happens" — demoed live against the digital twin. Near-zero cost, high density of decision-makers.
 
-*Funnel economics.* At $899 MXN/mo on the Operación plan and an assumed 24-month retention, LTV ≈ $21,576 MXN. Because Channel 1 pays out only as a share of realized revenue, CAC is variable rather than fixed, so the unit economics close without external capital.
+Funnel economics. At $899 MXN/mo on the Operación plan and an assumed 24-month retention, LTV ≈ $21,576 MXN. Because Channel 1 pays out only as a share of realized revenue, CAC is variable rather than fixed, so the unit economics close without external capital.
 
 Assumptions flagged: 20% accountant revenue share and 24-month retention are modelling assumptions, not observed data.
+
+### 1.5 Impact & Feasibility
+
+#### Impact thesis
+
+SMB liquidity failures are often timing failures rather than revenue failures.
+
+Beel's objective is therefore not to maximize credit utilization. Its objective
+is to maximize the amount of liquidity recovered before new debt is required.
+
+#### North-star metric
+
+*MXN of liquidity recovered without new debt.*
+
+This metric measures whether Beel actually prevents unnecessary borrowing rather
+than simply increasing access to credit.
+
+#### Impact metrics
+
+Beel tracks the following secondary impact metrics:
+
+- Emergency borrowing avoided
+- Liquidity breaches prevented
+- Receivables accelerated before a projected shortfall
+- Flexible obligations successfully rescheduled
+- Payroll and supplier payments protected
+- Percentage of detected gaps resolved without new debt
+- Structural deficits correctly refused for financing
+
+#### Feasibility model
+
+Beel separates financial intelligence from financial execution.
+
+text
+CFDI + Capital One Nessie
+          ↓
+Transaction / invoice reconciliation
+          ↓
+Learned customer payment behavior
+          ↓
+30-day liquidity forecast
+          ↓
+First liquidity breach
+          ↓
+Recovery counterfactuals
+          ↓
+Timing vs. structural classification
+          ↓
+Financing recommendation
+
+
+The financial engine is deterministic and explainable. The same normalized inputs
+produce the same forecast and decision.
+
+#### Credit philosophy
+
+Beel does not optimize for loan volume.
+
+A temporary timing gap may justify bridge financing when operational recovery
+actions cannot fully close the gap and the business remains viable after
+financing costs.
+
+A structural deficit should not be solved by adding debt.
+
+Therefore:
+
+text
+Temporary + recoverable gap
+        ↓
+Recovery actions
+        ↓
+Remaining gap
+        ↓
+Credit comparison if necessary
+
+
+Structural deficit
+        ↓
+No additional debt recommendation
+        ↓
+Review underlying business economics
+
+
+#### Production feasibility
+
+*Data layer*
+
+- Capital One Nessie transaction data
+- Mexican CFDI invoices
+- Historical payment behavior
+
+*Financial intelligence*
+
+- Deterministic liquidity forecasting
+- Learned payment terms
+- Recovery counterfactuals
+- Timing vs. structural classification
+- Stress testing
+
+*Security*
+
+- Tenant isolation
+- PostgreSQL Row-Level Security
+- Server-side sessions
+- Encrypted CFDI storage
+- Server-side Nessie account resolution
+
+*Credit boundary*
+
+Beel provides decision support and financing comparisons. It does not make the
+final lending decision. The financial institution remains responsible for
+underwriting, eligibility and loan origination.
+
+*Auditability*
+
+Forecast inputs, forecast snapshots, recommendations and decision outcomes can
+be retained as auditable events.
+
+#### Path to production
+
+*Phase 1 — Prototype*
+
+Nessie + CFDI + liquidity forecasting + recovery engine.
+
+*Phase 2 — Pilot*
+
+Onboard SMBs through accounting firms and financial partners.
+
+*Phase 3 — Bank expansion*
+
+Add additional financial institution integrations.
+
+*Phase 4 — Workflow automation*
+
+Automate approved recovery actions such as receivable follow-ups and payment
+timing workflows.
+
+*Phase 5 — Lending integrations*
+
+Connect financing recommendations to participating lenders while preserving the
+bank's underwriting responsibility.
 
 ---
 
 ## 2. The idea
 
-*Core Principle:* We are not a bank. We are the *intermediary between banks and the SMB*.
+Core Principle: We are not a bank. We are the intermediary between banks and the SMB.
 
 The product ingests a business's invoices (CFDI) and its real bank position, forecasts
 30-day liquidity, and when a shortfall appears it works down a ladder of solutions —
-*cheapest first, credit last*:
+cheapest first, credit last:
 
 1. Accelerate a receivable (collect early, possibly with a discount)
 2. Shift a payable or payroll date
 3. Draw on the existing cash buffer
-4. *Only if none of the above closes the gap:* shop credit across banks for the best rate
+4. Only if none of the above closes the gap: shop credit across banks for the best rate
 
 > "On the 24th you are 25,300 short for payroll. You do not need a loan — collecting
 > invoice A-4471 four days early closes it. If you would rather not push that client,
@@ -240,11 +381,11 @@ Nessie (Capital One)  →  SETTLEMENT layer
                          deposits / withdrawals / purchases = movements that happened
 
 
-An issued CFDI is *not cash* — it is a promise. The entire working-capital problem lives
+An issued CFDI is not cash — it is a promise. The entire working-capital problem lives
 in the delta between invoiced and collected.
 
 From CFDI alone you cannot say "you are 25,300 short on the 24th", because you do not know
-the opening balance. *CFDI gives the flows; Nessie gives the position.* Neither
+the opening balance. CFDI gives the flows; Nessie gives the position. Neither
 substitutes for the other.
 
 ### Obligations are exact, not predicted
@@ -271,7 +412,7 @@ estimation.
 
 ## 4. Architecture
 
-*Stack:* React + Tailwind · FastAPI · Pandas + NumPy · Supabase · Nessie.
+Stack: React + Tailwind · FastAPI · Pandas + NumPy · Supabase · Nessie.
 
 
 ┌────────────────────────────────────────────────┐
@@ -304,18 +445,18 @@ estimation.
 
 ### Where state lives
 
-Nessie is the *bank of record* and is never our database. It holds position, settled
+Nessie is the bank of record and is never our database. It holds position, settled
 flows and obligations, and we read them every run rather than caching them as truth.
 
 Supabase holds everything Nessie has no concept of:
 
-- *storage* — uploaded CFDI XML, kept for re-parsing when the parser improves
-- *invoices* — parsed CFDI: issuer, receiver, amount, date, terms, aging
-- *reconciliation* — the CFDI ↔️ Nessie flow matching from Phase 2
-- *forecast runs* — each projection snapshotted, so a recommendation can be replayed
+- storage — uploaded CFDI XML, kept for re-parsing when the parser improves
+- invoices — parsed CFDI: issuer, receiver, amount, date, terms, aging
+- reconciliation — the CFDI ↔️ Nessie flow matching from Phase 2
+- forecast runs — each projection snapshotted, so a recommendation can be replayed
   against the numbers that produced it
-- *offers* — quotes returned by each adapter, with the ranking that was shown
-- *auth* — one tenant per SMB, which a broker needs from day one
+- offers — quotes returned by each adapter, with the ranking that was shown
+- auth — one tenant per SMB, which a broker needs from day one
 
 Snapshotting forecast runs matters more than it looks: when a judge asks "why did it
 recommend that?", the answer is a stored row, not a re-run that may now differ.
@@ -336,7 +477,7 @@ forecast_runs    id, tenant_id, created_at, horizon_days, balance_at_run,
 suppressions     tenant_id, reason, forecast_run_id, expires_at
 
 
-invoices.uuid is the CFDI folio fiscal and *must carry a unique constraint*. It is the
+invoices.uuid is the CFDI folio fiscal and must carry a unique constraint. It is the
 natural key, and without it re-uploading the same SAT export double-counts the receivable
 book. That failure does not raise an error — it silently produces a recommendation to
 collect money that does not exist.
@@ -354,7 +495,7 @@ upload ZIP
   -> extracted fields to invoices
 
 
-*Never parse on read.* Queries hit Postgres; Storage is not touched again in normal
+Never parse on read. Queries hit Postgres; Storage is not touched again in normal
 operation. A dashboard that parses on every load re-reads hundreds of objects per page
 view.
 
@@ -394,14 +535,14 @@ class BankAdapter(Protocol):
 
 | Method | Capital One | Other banks |
 |--------|-------------|-------------|
-| get_position | *real* — GET /accounts/{id} → balance | mock |
-| get_settled_flows | *real* — /deposits, /withdrawals, /purchases | mock |
-| get_obligations | *real* — /accounts/{id}/bills | mock |
-| apply | *real* — POST /accounts/{id}/loans | mock |
-| quote_credit | *mocked* | mock |
+| get_position | real — GET /accounts/{id} → balance | mock |
+| get_settled_flows | real — /deposits, /withdrawals, /purchases | mock |
+| get_obligations | real — /accounts/{id}/bills | mock |
+| apply | real — POST /accounts/{id}/loans | mock |
+| quote_credit | mocked | mock |
 
 quote_credit is mocked for every bank, Capital One included. Nessie's Loan schema has
-amount, monthly_payment, credit_score, type, status and *no interest rate field*
+amount, monthly_payment, credit_score, type, status and no interest rate field
 — verified against the spec. No bank exposes live pricing to a hackathon either. So the
 quoting layer is ours: a credit_score → rate curve per bank, each mock given a distinct
 risk appetite so the ranking has something to rank.
@@ -439,7 +580,7 @@ create our own businesses.
 DepositCreate requires transaction_date, so sales history backdates correctly.
 PurchaseCreate requires only merchant_id, medium, amount — see Open Risks.
 
-Seed several businesses with *different cash shapes*: one steady, one strongly seasonal,
+Seed several businesses with different cash shapes: one steady, one strongly seasonal,
 one genuinely sinking. If they all look alike, the gap classifier has nothing to prove on
 stage.
 
@@ -463,8 +604,8 @@ the first quiet account.
 Match settled Nessie flows against CFDI documents. What is left over is the working capital
 picture:
 
-- CFDI issued, no matching deposit → *open receivable*, aged
-- CFDI received, no matching purchase → *open payable*, with its due date
+- CFDI issued, no matching deposit → open receivable, aged
+- CFDI received, no matching purchase → open payable, with its due date
 - Deposit with no CFDI → cash sale (common in abarrotes)
 
 Aging on open receivables is what makes rung 1 of the ladder possible at all.
@@ -473,10 +614,10 @@ Aging on open receivables is what makes rung 1 of the ladder possible at all.
 
 From settled deposits:
 
-- *baseline* — daily median, not mean; one 10x day destroys a mean
-- *day-of-week factors* — 7 multipliers
-- *dominant period* — autocorrelation over the series
-- *dispersion* — needed for the pessimistic band
+- baseline — daily median, not mean; one 10x day destroys a mean
+- day-of-week factors — 7 multipliers
+- dominant period — autocorrelation over the series
+- dispersion — needed for the pessimistic band
 
 Detecting the period instead of hardcoding it is what generalizes this. For Mexican SMBs the
 quincena cycle falls out on its own, and the same code picks up a net-30 invoicing cycle.
@@ -491,7 +632,7 @@ for d in 1..30:
     balance[d] = balance[d-1] + inflow − outflow
 
 
-Two curves, not one: expected, and *pessimistic* (inflow at p20, collection probability
+Two curves, not one: expected, and pessimistic (inflow at p20, collection probability
 discounted). A liquidity decision is taken against the bad scenario; a single mean line is
 not actionable.
 
@@ -525,7 +666,7 @@ business.
 
 ### Phase 7 — Work the ladder
 
-Each rung is a *simulated counterfactual against the real Nessie balance*, not a
+Each rung is a simulated counterfactual against the real Nessie balance, not a
 suggestion. Re-run Phase 4 with the change applied and check whether the breach clears.
 
 
@@ -558,13 +699,13 @@ Treating "delay a supplier payment" as free is how a tool like this loses a busi
 suppliers. Uniform terms are not a feature — they are the failure mode. Slack per supplier
 comes from what the data already shows:
 
-- *Dependence.* Restock frequency, plus whether the merchant list holds alternatives in
+- Dependence. Restock frequency, plus whether the merchant list holds alternatives in
   the same category. A supplier delivering every three days with no substitute is
   untouchable regardless of arithmetic.
-- *Proven tolerance.* If this business has already paid this supplier late and the
+- Proven tolerance. If this business has already paid this supplier late and the
   relationship continued, that tolerance is observed rather than guessed. No late payment
   in the history means no evidence of slack, so assume none.
-- *Concentration.* Share of total spend. Delaying the largest supplier is the highest-risk
+- Concentration. Share of total spend. Delaying the largest supplier is the highest-risk
   move available and should rank below drawing a credit line, not above it.
 
 Where the data is silent, the answer is zero slack. The ladder proposes moving a payable
@@ -593,8 +734,8 @@ Business view only. The bank view is cut (§0).
 | Login | Supabase auth, one tenant per SMB | — |
 | Integration | Razón social · account number · CFDI upload · confirm obligations | Login |
 | Dashboard | "What is happening?" — position, 30-day dual-band curve, open receivables and payables | Integration |
-| Warnings / solutions | System *push*: a breach was detected, here is the ranked ladder | Dashboard data |
-| Simulations | User *pull*: manual what-if ("delay Bimbo 5 days?") | Dashboard data |
+| Warnings / solutions | System push: a breach was detected, here is the ranked ladder | Dashboard data |
+| Simulations | User pull: manual what-if ("delay Bimbo 5 days?") | Dashboard data |
 
 ### The integration view — four fields
 
@@ -603,23 +744,23 @@ Business view only. The bank view is cut (§0).
 | 1 | Razón social | typed |
 | 2 | Account number | typed — see below |
 | 3 | CFDI | ZIP / multi-file upload |
-| 4 | Obligations | *pre-filled* from Nessie bills; the tenant sets rigidity and slack only |
+| 4 | Obligations | pre-filled from Nessie bills; the tenant sets rigidity and slack only |
 
 Fields 2 and 4 are not free data entry, and field 4 is the reason the form is cheap to
 build: bills already carry payee, payment_amount and recurring_date, so the tenant
 confirms rather than types. The RFC is likewise derived from the uploaded CFDI and only
 confirmed.
 
-payroll and tax obligations are hard and *not editable*. Shifting payroll past its
+payroll and tax obligations are hard and not editable. Shifting payroll past its
 legal date violates the LFT, so the engine must not be able to propose it even with the
-user's consent. slack_days defaults to *0*: no stated slack means no slack.
+user's consent. slack_days defaults to 0: no stated slack means no slack.
 
 ### Account number, not a dropdown
 
 One API key sees every account in the sandbox, so a dropdown would show one business the
 other tenants. The tenant types their account number instead.
 
-*The lookup must be server-side.* A front end that calls GET /accounts and filters in
+The lookup must be server-side. A front end that calls GET /accounts and filters in
 JavaScript leaks the full list into the browser's network tab — the same exposure, merely
 hidden.
 
@@ -642,12 +783,12 @@ Demo account numbers:
 
 ### Two things to settle before building
 
-*Warnings and Simulations are the same engine.* The split is who initiates: warnings are
+Warnings and Simulations are the same engine. The split is who initiates: warnings are
 pushed when the breach detector fires; simulations are pulled when the user changes an
 input. Both call the same Phase 7 counterfactual. Define this now or the same screen gets
 built twice.
 
-*First-run order is Login → Integration → everything else.* Dashboard, warnings and
+First-run order is Login → Integration → everything else. Dashboard, warnings and
 simulations are all empty until integration completes, so the empty state is not a polish
 item — it is the first screen anyone sees, including the judges.
 
@@ -657,7 +798,7 @@ item — it is the first screen anyone sees, including the judges.
 
 | Datum | Source | How |
 |-------|--------|-----|
-| RFC | CFDI — cfdi:Emisor/@Rfc | *Infer it.* The RFC appearing constantly in the Emisor position across the batch is theirs. Ask for confirmation, not entry. |
+| RFC | CFDI — cfdi:Emisor/@Rfc | Infer it. The RFC appearing constantly in the Emisor position across the batch is theirs. Ask for confirmation, not entry. |
 | Operating account | Nessie — GET /accounts?key= | User picks from the enumerated list. CFDI carries no bank account. |
 | Hard-date obligations | Neither | Rules classifier plus user override, stored per tenant. |
 
@@ -681,18 +822,18 @@ document.
 | Uploaded | Unlocks |
 |----------|---------|
 | One CFDI | Nothing. A single invoice is not a state or a history. |
-| *All open CFDI* (issued uncollected + received unpaid) | The minimum. Ladder rungs 1 and 2 do not exist without it. |
-| *+ 6–12 months of history* | Per-client payment behaviour (real DSO), which is what makes rung 1 credible. |
+| All open CFDI (issued uncollected + received unpaid) | The minimum. Ladder rungs 1 and 2 do not exist without it. |
+| + 6–12 months of history | Per-client payment behaviour (real DSO), which is what makes rung 1 credible. |
 
 To say "collect from Ferretería López, they pay in 4 days" we need how López pays, not an
 industry average. That comes from matching historical CFDI against settled deposits.
 
 The SAT allows bulk CFDI download, so requesting a ZIP of the last 6–12 months is realistic.
-*Design the upload for multi-file or ZIP from the start*, never a single file.
+Design the upload for multi-file or ZIP from the start, never a single file.
 
 ### Payment terms are learned, not assumed
 
-CFDI records that a PPD invoice is paid later but *never says when* — terms are
+CFDI records that a PPD invoice is paid later but never says when — terms are
 commercial, not fiscal, so the SAT does not collect them. A single global default is
 wrong twice over: it describes no real business, and it does not generalize to an SMB
 whose clients pay at 15, 60 or 90 days.
@@ -713,14 +854,14 @@ counterparty we have never been paid by. Measured on the seeded scenarios:
 |--------|---------|--------|---------|
 | Tiendas Del Valle | 15d | 2d | reliable |
 | Super Mercados Norte | 45d | 2d | reliable |
-| Autoservicio La Central | 38d | 30d | *variable — do not trust the date* |
+| Autoservicio La Central | 38d | 30d | variable — do not trust the date |
 | Cocina Economica Doña Mari | 28d | 4d | reliable |
 
 The spread matters as much as the median. A counterparty whose lag swings 30 days has a
 median that means nothing operationally, and rung 1 must not present its landing date as
 dependable.
 
-*Why this is worth the effort:* on bajio the learned terms leave the 30-day
+Why this is worth the effort: on bajio the learned terms leave the 30-day
 collection total completely unchanged at 180,625 while moving every landing date — one
 invoice from day 22 to day 7, another from day 12 to day 27. An aggregate metric would
 report that nothing happened. The liquidity decision changes entirely.
@@ -731,7 +872,7 @@ changing the forecast horizon cannot silently reprice every client's credit term
 
 ### The PUE / PPD trap
 
-MetodoPago="PUE" means *already paid*. It is not a receivable.
+MetodoPago="PUE" means already paid. It is not a receivable.
 
 Only PPD invoices are open receivables. Treating every issued CFDI as a receivable inflates
 the book massively and makes rung 1 recommend collecting invoices that are already collected.
@@ -741,18 +882,18 @@ Filter on MetodoPago="PPD" and cross-check the payment complement.
 
 A permanent "never offer credit to this SMB" list was considered and rejected.
 
-*It is already computed.* The timing-vs-structural classifier is the decision not to
+It is already computed. The timing-vs-structural classifier is the decision not to
 offer credit. A blacklist duplicates it as stored state, and stored state goes stale: a
 business classified structural in September may be healthy in December, and the list would
-keep refusing it. *Eligibility is a function, not a state* — evaluated fresh each run
+keep refusing it. Eligibility is a function, not a state — evaluated fresh each run
 against today's data. A function cannot go stale.
 
-*It also inverts the product's own posture.* The differentiator is being able to say
+It also inverts the product's own posture. The differentiator is being able to say
 "do not borrow" as revisable advice on the client's side. A blacklist is a permanent
 judgement about a business, held by the intermediary — the thing banks do badly and this
 product exists to improve on.
 
-*And it edges toward a regulated activity.* In Mexico, maintaining a register of
+And it edges toward a regulated activity. In Mexico, maintaining a register of
 businesses denied credit resembles what a sociedad de información crediticia does (Buró
 de Crédito, Círculo de Crédito), which requires authorisation. Whether a broker's internal
 list falls under it is a question for counsel — but "we keep our own blacklist" is an
@@ -773,14 +914,14 @@ jsonc
 It expires on its own, points at its evidence so the business can see why, and lifts on
 data rather than on paperwork.
 
-*The one legitimate hard exclusion* is sanctions lists and declared bankruptcies — and
+The one legitimate hard exclusion is sanctions lists and declared bankruptcies — and
 those have a defining property: they come from outside. We consume them, we do not author
 them. That is compliance, not opinion. If we wrote the entry, it is a temporary
 suppression with evidence; if an authority wrote it, it is a hard filter.
 
 ### What we never ask for
 
-*Never the bank API key.* Nessie has no OAuth — the spec contains zero consent flow, only
+Never the bank API key. Nessie has no OAuth — the spec contains zero consent flow, only
 ApiKeyAuth as a query parameter — but an input reading "paste your bank API key" is the
 credential-sharing antipattern and reads as a red flag in any fintech review.
 
@@ -807,7 +948,7 @@ Generating the two sides independently is the failure mode: Phase 2 would reconc
 and the demo would show 100% unmatched, which reads as a broken product rather than as test
 data. One scenario, both outputs, shared identifiers.
 
-*Leave some PPD invoices deliberately unsettled.* Those are the open receivables the ladder
+Leave some PPD invoices deliberately unsettled. Those are the open receivables the ladder
 acts on. That is the demo, not a gap in the data.
 
 ### Scenarios
@@ -822,8 +963,8 @@ Three businesses with distinct cash shapes, so the Phase 6 classifier has someth
 
 ### What is fake, and what must not be
 
-CFDI mocks are *structurally* realistic with fake UUID and Sello. Making them
-SAT-valid would require a CSD certificate, so *the parser must not validate the seal* —
+CFDI mocks are structurally realistic with fake UUID and Sello. Making them
+SAT-valid would require a CSD certificate, so the parser must not validate the seal —
 otherwise it can never be tested.
 
 Build the generator from a real sample CFDI as a structural template rather than from the
@@ -834,30 +975,30 @@ specification; catalogues and attribute casing are where the time goes.
 Remove Capital One and three things break. Worth being able to answer directly when asked
 why the sponsor API is not decorative:
 
-1. *No cash position.* account.balance is the only real starting point; CFDI cannot
+1. No cash position. account.balance is the only real starting point; CFDI cannot
    supply it.
-2. *Nowhere to simulate.* The ladder's counterfactuals run against a real bank sandbox,
+2. Nowhere to simulate. The ladder's counterfactuals run against a real bank sandbox,
    which is what separates them from a spreadsheet.
-3. *Nowhere to land the offer.* POST /accounts/{id}/loans makes the winning application
+3. Nowhere to land the offer. POST /accounts/{id}/loans makes the winning application
    real instead of a mockup.
 
 ## 11. Where Nessie does not help
 
-- *No accounts receivable.* No invoice entity at all. Receivables come entirely from CFDI.
-- *No interest rates.* Loan carries no rate field, so pricing is our layer.
-- *transfers is thin.* The seeded record has only date, amount and description — no
+- No accounts receivable. No invoice entity at all. Receivables come entirely from CFDI.
+- No interest rates. Loan carries no rate field, so pricing is our layer.
+- transfers is thin. The seeded record has only date, amount and description — no
   payer/payee. Do not use it as an inter-business payment rail.
 
 ## 12. Build order
 
 Phases 0, 1 and 2 and the learned-terms layer are done (§0). What remains, in order:
 
-1. *Phases 3, 4, 5* — decompose inflows, project 30 days, detect the breach. The
+1. Phases 3, 4, 5 — decompose inflows, project 30 days, detect the breach. The
    smallest slice that shows something real. Consumes the reconciliation output in §0.
-2. *Phase 6* — the timing-vs-structural classifier. One comparison, and the single most
+2. Phase 6 — the timing-vs-structural classifier. One comparison, and the single most
    important piece of intelligence in the system.
-3. *Supabase wiring* — schema in §3, then the integration view's four fields.
-4. *Phase 7* — the ladder. Rungs 1 and 2 already have their data.
+3. Supabase wiring — schema in §3, then the integration view's four fields.
+4. Phase 7 — the ladder. Rungs 1 and 2 already have their data.
 5. Dashboard, then warnings and simulations off the same engine.
 
 If time collapses, the seeded scenarios already carry the three verdicts, so the classifier
@@ -872,24 +1013,24 @@ where every part of the product has something to say.
 
 ## 13. Deliberate non-goals
 
-- *No neural forecasting.* Seasonal decomposition beats a model trained on weeks of sparse
+- No neural forecasting. Seasonal decomposition beats a model trained on weeks of sparse
   data at a 30-day horizon, and it explains itself to a judge and to a shopkeeper. "Your
   Thursday before payday is your worst cash day" sells; a weight vector does not.
-- *No real multi-bank integration.* Adapters are mocked by design, and we say so.
-- *No simulated bank connection.* A fake consent handshake returning a token nothing
+- No real multi-bank integration. Adapters are mocked by design, and we say so.
+- No simulated bank connection. A fake consent handshake returning a token nothing
   consumes is theatre. Account-number entry, and one honest sentence in the pitch about
   what production would do instead.
-- *No credit blacklist.* Rejected on design and regulatory grounds — see §7.
-- *No bank / portfolio view* in this build. Design retained in §5 and §6 Phase 8.
-- *No CFDI cancellation, complemento chains, or tax computation.* Parse only what the
+- No credit blacklist. Rejected on design and regulatory grounds — see §7.
+- No bank / portfolio view in this build. Design retained in §5 and §6 Phase 8.
+- No CFDI cancellation, complemento chains, or tax computation. Parse only what the
   forecast needs: issuer, receiver, amount, date, terms.
-- *No multi-currency or multi-entity consolidation.*
+- No multi-currency or multi-entity consolidation.
 
 ## 14. Open risks
 
 | Risk | Impact | Action |
 |------|--------|--------|
-| ~purchase_date backdating unverified~ *RESOLVED* | — | Verified: purchase_date is accepted on create and honoured despite being absent from PurchaseCreate. Backdated restock history works. |
+| purchase_date backdating unverified RESOLVED | — | Verified: purchase_date is accepted on create and honoured despite being absent from PurchaseCreate. Backdated restock history works. |
 | balance is immutable after account creation. Posted flows do not move it, and PUT /accounts/{id} ignores the field while returning 202 and echoing the old value. | A seeded scenario cannot be re-tuned through the balance; a wrong opening balance means deleting and recreating the account. | Set the balance in the creating POST. Tune scenarios through bills, which PUT honours in full. |
 | Auth enforcement is route-dependent. POST /accounts/{id}/loans returns "Invalid API key.", while purchases and withdrawals return field-validation errors first. | A 400 is not proof the key works, and the 401 path exists on some routes only. | Validate keys against GET /customers. |
 | Purchase, Withdrawal and Transfer are absent from the OpenAPI spec. | Generated clients are incomplete. | Shapes recovered from live responses; hand-write those types. |
