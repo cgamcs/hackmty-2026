@@ -28,9 +28,11 @@ import zipfile
 from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
+from typing import Literal
 
 from fastapi import Cookie, Depends, FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).parent.parent
 for extra in (ROOT / "engine", ROOT, Path(__file__).parent):
@@ -534,6 +536,24 @@ def sme_dashboard(account_id: str,
         cash_buffer=payload["available_cash_buffer"])
 
 
+def _live_snapshot(tenant_id: str) -> tuple[dict, dict, object]:
+    """Stored inputs plus the live Nessie balance, shared by the Stress Lab and Recovery."""
+    with tenant_tx(tenant_id) as conn:
+        tenant = fetch_one(conn, """
+            select t.id, t.razon_social, t.rfc, t.account_id, u.email
+            from tenants t join users u on u.id = t.owner_id where t.id = %s
+        """, (tenant_id,))
+        if not tenant or not tenant["account_id"]:
+            raise HTTPException(404, "Integración incompleta.")
+        payload = snapshot_mod.build(conn, tenant_id, as_of=date.today())
+
+    account = Nessie().account(tenant["account_id"])
+    if account is None:
+        raise HTTPException(503, "La cuenta no está disponible en Nessie.")
+    payload["current_balance"] = float(account.get("balance", 0))
+    return tenant, account, snapshot_from_dict(payload)
+
+
 @app.post("/api/stress")
 def stress(request: StressRequest,
            session_tenant: str | None = Depends(current_tenant_id)):
@@ -550,24 +570,30 @@ def stress(request: StressRequest,
             raise HTTPException(404, "No hay negocios conectados.")
         tenant_id = str(row["id"])
 
-    with tenant_tx(tenant_id) as conn:
-        tenant = fetch_one(conn, """
-            select t.id, t.razon_social, t.rfc, t.account_id, u.email
-            from tenants t join users u on u.id = t.owner_id where t.id = %s
-        """, (tenant_id,))
-        if not tenant or not tenant["account_id"]:
-            raise HTTPException(404, "Integración incompleta.")
-        payload = snapshot_mod.build(conn, tenant_id, as_of=date.today())
-
-    account = Nessie().account(tenant["account_id"])
-    if account is None:
-        raise HTTPException(503, "La cuenta no está disponible en Nessie.")
-    payload["current_balance"] = float(account.get("balance", 0))
-
-    return run_stress(request, snapshot_from_dict(payload), account, {
+    tenant, account, snapshot = _live_snapshot(tenant_id)
+    return run_stress(request, snapshot, account, {
         "slug": str(tenant["id"]), "name": tenant["razon_social"] or "",
         "rfc": tenant["rfc"] or "", "owner": tenant["email"],
     })
+
+
+class RecoveryRequest(BaseModel):
+    excluded: list[Literal["ACCELERATE", "SHIFT", "BUFFER"]] = Field(default_factory=list)
+
+
+@app.post("/api/recovery")
+def recovery(request: RecoveryRequest, tenant_id: str = Depends(require_tenant)):
+    """Re-run the recovery ladder without the rungs the owner switched off.
+
+    This cannot be done in the browser: the engine stops at the first rung that clears the
+    breach, so what the later rungs would do is only known by projecting again without the
+    excluded ones. Credit cannot be switched off; it is the last resort, not an option.
+    """
+    _, _, snapshot = _live_snapshot(tenant_id)
+    excluded = frozenset(action for action, rung in dashboard.RUNG_BY_ACTION.items()
+                         if rung in request.excluded)
+    result = FinancialEngine().analyze(snapshot, excluded_actions=excluded).to_dict()
+    return dashboard.build_ladder(result, result.get("breach"))
 
 
 @app.get("/api/health")

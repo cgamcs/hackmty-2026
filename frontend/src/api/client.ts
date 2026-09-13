@@ -1,4 +1,4 @@
-import type { DashboardData, StressRequest, StressSimulationResponse } from '@/types';
+import type { DashboardData, Ladder, LadderRung, StressRequest, StressSimulationResponse } from '@/types';
 import { buildScenario } from '@/mock/scenario';
 
 // Empty by default: vite.config.ts proxies /api to the backend, so requests stay
@@ -124,6 +124,10 @@ export const saveObligation = (
   id: string,
   patch: { rigidity: 'hard' | 'slack'; slack_days: number; relationship_cost?: number },
 ) => post<{ ok: true }>(`/api/obligations/${id}`, patch);
+
+/** The engine's recovery ladder re-run without the rungs the owner switched off. */
+export const fetchRecoveryLadder = (excluded: LadderRung[]) =>
+  post<Ladder>('/api/recovery', { excluded });
 
 /** Nessie → cash_flows, then reconcile CFDI against movements and learn payment terms. */
 export const runSync = () =>

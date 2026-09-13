@@ -96,6 +96,19 @@ export interface LadderStep {
   available: boolean;
   /** Needed to close the gap, cheapest first. */
   applied: boolean;
+  /** This rung's last action cleared the breach, so the rungs after it were not needed. */
+  resolves: boolean;
+  /** Position of this rung's first action in the engine's plan; null when it was not used. */
+  order: number | null;
+  /** What the rung does, one entry per invoice collected or payment moved. */
+  actions: LadderAction[];
+}
+
+export interface LadderAction {
+  /** Receivable id, or "<obligation id>:<due date>" for a moved payment; empty for the buffer. */
+  targetId: string;
+  newDate: ISODate | null;
+  amount: number;
 }
 
 export interface Ladder {

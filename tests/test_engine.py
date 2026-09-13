@@ -194,6 +194,68 @@ class FinancialEngineTests(unittest.TestCase):
         self.assertNotIn("accelerate_receivable", {item.action for item in result.recommendations})
         self.assertEqual(result.financing_decision.status, FinancingStatus.RECOMMENDED)
 
+    @staticmethod
+    def _two_shortfalls(receivables: list[Receivable]) -> BusinessSnapshot:
+        # Payroll in 2 days that only the buffer can cover (early collections land on day 3),
+        # then rent on day 18 that an early collection can cover.
+        return BusinessSnapshot(
+            as_of=TODAY,
+            current_balance=38_000,
+            available_cash_buffer=50_000,
+            obligations=[
+                Obligation("payroll", TODAY + timedelta(days=2), 78_000, "Nómina", hard_deadline=True),
+                Obligation("rent", TODAY + timedelta(days=18), 28_000, "Renta"),
+            ],
+            receivables=receivables,
+        )
+
+    LATE_INVOICE = Receivable("late-invoice", TODAY + timedelta(days=26), 47_500,
+                              "Super Mercados Norte", 0.9, TODAY + timedelta(days=3), 0.02)
+    TAIL_INVOICE = Receivable("tail-invoice", TODAY + timedelta(days=28), 80_000, "Cliente Final", 0.9)
+
+    def test_ladder_works_a_later_shortfall_before_suggesting_credit(self) -> None:
+        # The ladder used to jump straight to credit once the buffer covered the first
+        # shortfall, even though collecting early covers the second one.
+        result = self.engine.analyze(self._two_shortfalls([self.LATE_INVOICE, self.TAIL_INVOICE]))
+        self.assertEqual([item.action for item in result.recommendations],
+                         ["draw_cash_buffer", "accelerate_receivable"])
+        self.assertEqual(
+            result.financing_decision.status, FinancingStatus.COVERED_BY_RECOVERY_PLAN)
+
+    def test_early_collection_prefers_invoices_due_after_the_shortfall(self) -> None:
+        # Pulling forward an invoice that already lands before the shortfall only removes its
+        # collection risk; one due afterwards adds cash that would otherwise arrive too late.
+        due_before = Receivable("due-before-rent", TODAY + timedelta(days=17), 60_000,
+                                "Tiendas del Valle", 0.3, TODAY + timedelta(days=3), 0.02)
+        result = self.engine.analyze(
+            self._two_shortfalls([due_before, self.LATE_INVOICE, self.TAIL_INVOICE]))
+        accelerated = [item.parameters["receivable_id"] for item in result.recommendations
+                       if item.action == "accelerate_receivable"]
+        self.assertEqual(accelerated, ["late-invoice"])
+
+    def test_excluded_rung_is_skipped_and_the_next_one_is_tried(self) -> None:
+        # The owner switches off "collect early" (they would rather not push that client):
+        # the ladder must fall through to the buffer instead of using the receivable.
+        snapshot = BusinessSnapshot(
+            as_of=TODAY,
+            current_balance=8_000,
+            safety_buffer=2_000,
+            available_cash_buffer=50_000,
+            historical_flows=weekday_history(3_000, 900),
+            obligations=[
+                Obligation("payroll", TODAY + timedelta(days=4), 20_000, "Nómina", hard_deadline=True)
+            ],
+            receivables=[
+                Receivable("invoice-1", TODAY + timedelta(days=8), 25_000, "Cliente Uno", 0.9,
+                           TODAY + timedelta(days=2), 0.02)
+            ],
+        )
+        result = self.engine.analyze(
+            snapshot, excluded_actions=frozenset({"accelerate_receivable"}))
+        self.assertEqual([item.action for item in result.recommendations], ["draw_cash_buffer"])
+        self.assertEqual(
+            result.financing_decision.status, FinancingStatus.COVERED_BY_RECOVERY_PLAN)
+
     def test_normalized_json_can_build_snapshot(self) -> None:
         snapshot = snapshot_from_dict(
             {

@@ -74,6 +74,7 @@ class FinancialEngine:
         snapshot: BusinessSnapshot,
         scenario: StressScenario | None = None,
         include_recommendations: bool = True,
+        excluded_actions: frozenset[str] = frozenset(),
     ) -> ForecastResult:
         self._validate(snapshot)
         scenario = scenario or StressScenario()
@@ -83,7 +84,7 @@ class FinancialEngine:
         health = self._health_score(snapshot, points)
         resilience = self._resilience_score(snapshot, points, breach)
         recommendations = (
-            self._build_ladder(snapshot, breach, gap_type)
+            self._build_ladder(snapshot, breach, gap_type, excluded_actions)
             if include_recommendations and breach
             else []
         )
@@ -297,8 +298,15 @@ class FinancialEngine:
         return round(reserve_component + downside_component + breach_component)
 
     def _build_ladder(
-        self, snapshot: BusinessSnapshot, breach: Breach, gap_type: GapType
+        self,
+        snapshot: BusinessSnapshot,
+        breach: Breach,
+        gap_type: GapType,
+        excluded_actions: frozenset[str] = frozenset(),
     ) -> list[Recommendation]:
+        """Cheapest first, credit last. `excluded_actions` are rungs the owner switched off
+        (for example, not pushing a client to pay early); the ladder falls through to the
+        next rung as if the excluded one had nothing to offer. Credit cannot be excluded."""
         if gap_type == GapType.STRUCTURAL:
             return [
                 Recommendation(
@@ -317,127 +325,35 @@ class FinancialEngine:
             ]
 
         recommendations: list[Recommendation] = []
-        working_snapshot = snapshot
+        working = snapshot
         residual_breach = breach
-        rank = 1
-        # Only a receivable with an earliest collection date may be pulled forward. None
-        # means the client cannot credibly be asked to pay early (an erratic or unknown
-        # payer); reading it as "tomorrow" proposed collections that would not happen.
-        eligible = sorted(
-            (
-                item
-                for item in snapshot.receivables
-                if item.earliest_collection_date is not None
-                and item.earliest_collection_date <= breach.date
-                and item.due_date > snapshot.as_of
-            ),
-            key=lambda item: (item.early_payment_discount, -item.amount),
-        )
-        for receivable in eligible:
-            collection_day = max(
-                snapshot.as_of + timedelta(days=1), receivable.earliest_collection_date
-            )
-            accelerated = replace(
-                receivable,
-                due_date=collection_day,
-                amount=receivable.amount * (1 - receivable.early_payment_discount),
-                collection_probability=1.0,
-            )
-            working_snapshot = replace(
-                working_snapshot,
-                receivables=[
-                    accelerated if item.id == receivable.id else item
-                    for item in working_snapshot.receivables
-                ],
-            )
-            result = self.analyze(working_snapshot, include_recommendations=False)
-            impact = receivable.amount * (1 - receivable.early_payment_discount)
-            recommendations.append(
-                Recommendation(
-                    rank=rank,
-                    action="accelerate_receivable",
-                    title=f"Cobra antes a {receivable.customer}",
-                    description=f"Adelanta la factura {receivable.id} al {collection_day.isoformat()}.",
-                    cash_impact=round(impact, 2),
-                    estimated_cost=round(receivable.amount * receivable.early_payment_discount, 2),
-                    resolves_breach=result.breach is None,
-                    parameters={"receivable_id": receivable.id, "new_date": collection_day.isoformat()},
-                )
-            )
-            rank += 1
-            if result.breach is None:
-                return recommendations
-            residual_breach = result.breach
+        used_receivables: set[str] = set()
+        used_obligations: set[str] = set()
 
-        movable = sorted(
-            (
-                item
-                for item in snapshot.obligations
-                if (
-                    not item.hard_deadline
-                    and item.slack_days > 0
-                    and item.due_date <= breach.date
-                )
-            ),
-            key=lambda item: -item.amount,
-        )
-        for obligation in movable:
-            new_date = min(
-                snapshot.as_of + timedelta(days=self.horizon_days),
-                obligation.due_date + timedelta(days=min(7, obligation.slack_days)),
+        # Work the ladder against the CURRENT shortfall and restart from the cheapest rung
+        # after every action. Covering one shortfall can expose a later one (payroll, then
+        # rent two weeks on), and that one may close without credit even when the first
+        # could not: a collection that lands too late for payroll can still beat the rent.
+        # A single pass against the first shortfall sent every later one straight to credit.
+        while True:
+            step = (
+                self._next_collection(
+                    snapshot, working, residual_breach, used_receivables, excluded_actions)
+                or self._next_shift(
+                    snapshot, working, residual_breach, used_obligations, excluded_actions)
+                or self._next_buffer_draw(working, residual_breach, excluded_actions)
             )
-            shifted = replace(obligation, due_date=new_date)
-            working_snapshot = replace(
-                working_snapshot,
-                obligations=[
-                    shifted if item.id == obligation.id else item
-                    for item in working_snapshot.obligations
-                ],
-            )
-            result = self.analyze(working_snapshot, include_recommendations=False)
+            if step is None:
+                break
+            working, fields = step
+            result = self.analyze(working, include_recommendations=False)
             recommendations.append(
                 Recommendation(
-                    rank=rank,
-                    action="shift_obligation",
-                    title=f"Negocia una nueva fecha con {obligation.payee}",
-                    description=(
-                        f"Mueve {obligation.id} dentro de su holgura comprobada, "
-                        f"al {new_date.isoformat()}."
-                    ),
-                    cash_impact=round(obligation.amount, 2),
-                    estimated_cost=round(obligation.relationship_cost, 2),
+                    rank=len(recommendations) + 1,
                     resolves_breach=result.breach is None,
-                    parameters={"obligation_id": obligation.id, "new_date": new_date.isoformat()},
+                    **fields,
                 )
             )
-            rank += 1
-            if result.breach is None:
-                return recommendations
-            residual_breach = result.breach
-
-        if snapshot.available_cash_buffer > 0:
-            injection = min(
-                snapshot.available_cash_buffer, ceil(residual_breach.shortfall * 1.05)
-            )
-            working_snapshot = replace(
-                working_snapshot,
-                current_balance=working_snapshot.current_balance + injection,
-                available_cash_buffer=working_snapshot.available_cash_buffer - injection,
-            )
-            result = self.analyze(working_snapshot, include_recommendations=False)
-            recommendations.append(
-                Recommendation(
-                    rank=rank,
-                    action="draw_cash_buffer",
-                    title="Usa la reserva de efectivo",
-                    description="Transfiere solo lo necesario de la reserva al flujo operativo.",
-                    cash_impact=round(injection, 2),
-                    estimated_cost=0.0,
-                    resolves_breach=result.breach is None,
-                    parameters={"amount": injection},
-                )
-            )
-            rank += 1
             if result.breach is None:
                 return recommendations
             residual_breach = result.breach
@@ -445,7 +361,7 @@ class FinancialEngine:
         credit_amount = ceil(residual_breach.shortfall * 1.10 / 100.0) * 100
         recommendations.append(
             Recommendation(
-                rank=rank,
+                rank=len(recommendations) + 1,
                 action="compare_credit",
                 title="Compara financiamiento por el faltante residual",
                 description="Solicita cotizaciones solo después de agotar las opciones operativas.",
@@ -455,11 +371,132 @@ class FinancialEngine:
                 parameters={
                     "amount": credit_amount,
                     "residual_shortfall": residual_breach.shortfall,
-                    "term_days": self._days_underwater(working_snapshot),
+                    "term_days": self._days_underwater(working),
                 },
             )
         )
         return recommendations
+
+    def _next_collection(
+        self,
+        snapshot: BusinessSnapshot,
+        working: BusinessSnapshot,
+        breach: Breach,
+        used: set[str],
+        excluded_actions: frozenset[str],
+    ) -> tuple[BusinessSnapshot, dict] | None:
+        """Rung 1: pull one receivable forward so its cash lands before the shortfall."""
+        if "accelerate_receivable" in excluded_actions:
+            return None
+        # Only a receivable with an earliest collection date may be pulled forward. None
+        # means the client cannot credibly be asked to pay early (an erratic or unknown
+        # payer); reading it as "tomorrow" proposed collections that would not happen.
+        eligible = [
+            item
+            for item in working.receivables
+            if item.id not in used
+            and item.earliest_collection_date is not None
+            and item.earliest_collection_date <= breach.date
+            and item.due_date > snapshot.as_of
+        ]
+        if not eligible:
+            return None
+        # Cheapest discount first. Then an invoice due AFTER the shortfall: pulling it forward
+        # adds cash that would otherwise arrive too late, while one already due before it
+        # only removes collection risk. Then the largest amount.
+        receivable = min(
+            eligible,
+            key=lambda item: (item.early_payment_discount, item.due_date <= breach.date, -item.amount),
+        )
+        used.add(receivable.id)
+        collection_day = max(snapshot.as_of + timedelta(days=1), receivable.earliest_collection_date)
+        impact = receivable.amount * (1 - receivable.early_payment_discount)
+        accelerated = replace(
+            receivable, due_date=collection_day, amount=impact, collection_probability=1.0)
+        working = replace(
+            working,
+            receivables=[
+                accelerated if item.id == receivable.id else item for item in working.receivables
+            ],
+        )
+        return working, {
+            "action": "accelerate_receivable",
+            "title": f"Cobra antes a {receivable.customer}",
+            "description": f"Adelanta la factura {receivable.id} al {collection_day.isoformat()}.",
+            "cash_impact": round(impact, 2),
+            "estimated_cost": round(receivable.amount * receivable.early_payment_discount, 2),
+            "parameters": {"receivable_id": receivable.id, "new_date": collection_day.isoformat()},
+        }
+
+    def _next_shift(
+        self,
+        snapshot: BusinessSnapshot,
+        working: BusinessSnapshot,
+        breach: Breach,
+        used: set[str],
+        excluded_actions: frozenset[str],
+    ) -> tuple[BusinessSnapshot, dict] | None:
+        """Rung 2: move one flexible payment inside its confirmed slack."""
+        if "shift_obligation" in excluded_actions:
+            return None
+        movable = [
+            item
+            for item in working.obligations
+            if item.id not in used
+            and not item.hard_deadline
+            and item.slack_days > 0
+            and item.due_date <= breach.date
+        ]
+        if not movable:
+            return None
+        obligation = max(movable, key=lambda item: item.amount)
+        used.add(obligation.id)
+        new_date = min(
+            snapshot.as_of + timedelta(days=self.horizon_days),
+            obligation.due_date + timedelta(days=min(7, obligation.slack_days)),
+        )
+        shifted = replace(obligation, due_date=new_date)
+        working = replace(
+            working,
+            obligations=[
+                shifted if item.id == obligation.id else item for item in working.obligations
+            ],
+        )
+        return working, {
+            "action": "shift_obligation",
+            "title": f"Negocia una nueva fecha con {obligation.payee}",
+            "description": (
+                f"Mueve {obligation.id} dentro de su holgura comprobada, al {new_date.isoformat()}."
+            ),
+            "cash_impact": round(obligation.amount, 2),
+            "estimated_cost": round(obligation.relationship_cost, 2),
+            "parameters": {"obligation_id": obligation.id, "new_date": new_date.isoformat()},
+        }
+
+    @staticmethod
+    def _next_buffer_draw(
+        working: BusinessSnapshot,
+        breach: Breach,
+        excluded_actions: frozenset[str],
+    ) -> tuple[BusinessSnapshot, dict] | None:
+        """Rung 3: move just enough of the declared cash buffer into the operating account.
+        Repeats for later shortfalls while any buffer is left."""
+        if "draw_cash_buffer" in excluded_actions or working.available_cash_buffer <= 0:
+            return None
+        injection = min(working.available_cash_buffer, ceil(breach.shortfall * 1.05))
+        working = replace(
+            working,
+            current_balance=working.current_balance + injection,
+            available_cash_buffer=working.available_cash_buffer - injection,
+        )
+        return working, {
+            "action": "draw_cash_buffer",
+            "title": "Usa la reserva de efectivo",
+            "description": "Transfiere solo lo necesario de la reserva al flujo operativo.",
+            "cash_impact": round(injection, 2),
+            "estimated_cost": 0.0,
+            "parameters": {"amount": injection},
+        }
 
     def _decide_financing(
         self,

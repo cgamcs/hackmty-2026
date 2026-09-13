@@ -88,44 +88,56 @@ def daily_flows(flows: list[dict], today: date, days: int = 30) -> list[dict]:
 
 
 def build_ladder(result: dict, breach: dict | None) -> dict:
-    """Map engine recommendations onto the four-rung ladder.
+    """Map the engine's recovery plan onto the four-rung ladder.
 
-    Every rung is always present, so the UI can show which options exist and which do
-    not. Showing only the available ones would hide the fact that, say, accelerating a
-    receivable was considered and ruled out.
+    Every rung is always present, so the UI can show which options exist and which do not.
+    The plan is the engine's: each recommendation was re-projected, so amounts and the
+    residual come from it rather than from subtraction in the browser. A rung with several
+    recommendations (two invoices collected early) counts all of them.
     """
     financing = result.get("financing_decision") or {}
-    recommendations = result.get("recommendations") or []
-
-    by_rung: dict[str, dict] = {}
-    for rec in recommendations:
-        rung = RUNG_BY_ACTION.get(rec.get("action", ""))
-        if not rung or rung in by_rung:
-            continue
-        by_rung[rung] = rec
-
+    declined = financing.get("status") == "not_recommended_structural"
     shortfall = float(breach["shortfall"]) if breach else 0.0
-    steps, covered = [], 0.0
-    for rung in ("ACCELERATE", "SHIFT", "BUFFER", "CREDIT"):
-        rec = by_rung.get(rung)
-        closes = float(rec.get("cash_impact", 0)) if rec else 0.0
-        # "Applied" means this rung is actually needed: the cheaper ones above it did not
-        # close the gap on their own.
-        applied = bool(rec) and shortfall > 0 and covered < shortfall
-        if applied and rung != "CREDIT":
-            covered += closes
+
+    by_rung: dict[str, list[dict]] = {rung: [] for rung in RUNG_SHORT}
+    for rec in result.get("recommendations") or []:
+        rung = RUNG_BY_ACTION.get(rec.get("action", ""))
+        # A structural deficit is a refusal, not a rung the owner can apply.
+        if rung and rec.get("action") != "reduce_structural_deficit":
+            by_rung[rung].append(rec)
+
+    steps = []
+    for rung, recs in by_rung.items():
+        first = recs[0] if recs else {}
         steps.append({
             "rung": rung,
             "short": RUNG_SHORT[rung],
-            "title": (rec or {}).get("title") or RUNG_SHORT[rung],
-            "phrase": (rec or {}).get("description") or "",
-            "closes": round(closes, 2),
-            "available": bool(rec),
-            "applied": applied,
+            "title": first.get("title") or RUNG_SHORT[rung],
+            "phrase": first.get("description") or "",
+            "closes": round(sum(float(rec.get("cash_impact", 0)) for rec in recs), 2),
+            "available": bool(recs),
+            # The engine stops at the first rung that clears the breach, so every
+            # recommendation it emitted was needed.
+            "applied": bool(recs),
+            "resolves": any(rec.get("resolves_breach") for rec in recs),
+            # Where this rung first acted in the engine's plan. The ladder restarts from the
+            # cheapest rung after each shortfall, so the buffer can come before a collection.
+            "order": min((int(rec.get("rank", 0)) for rec in recs), default=None),
+            "actions": [{
+                "targetId": str((rec.get("parameters") or {}).get("receivable_id")
+                                or (rec.get("parameters") or {}).get("obligation_id") or ""),
+                "newDate": (rec.get("parameters") or {}).get("new_date"),
+                "amount": round(float(rec.get("cash_impact", 0)), 2),
+            } for rec in recs],
         })
 
-    residual = max(shortfall - covered, 0.0)
-    declined = financing.get("status") == "not_recommended_structural"
+    credit = by_rung["CREDIT"][0] if by_rung["CREDIT"] else None
+    if credit:
+        residual = float((credit.get("parameters") or {}).get("residual_shortfall", shortfall))
+    else:
+        # Without a credit rung the operational rungs cleared the breach, unless the gap is
+        # structural and the ladder never ran.
+        residual = shortfall if declined else 0.0
     credit_amount = 0.0 if declined else float(financing.get("suggested_amount", 0) or 0)
 
     return {
@@ -375,12 +387,12 @@ def demo() -> None:
         ["ACCELERATE", "SHIFT", "BUFFER", "CREDIT"]
     assert all(s["available"] is False for s in ladder["steps"])
 
-    # Cheapest-first: the buffer rung is not marked applied once cobranza covers the gap.
+    # Cheapest-first: the engine stopped at cobranza, so the buffer rung is not applied.
     ladder2 = build_ladder(
         {"financing_decision": {"status": "covered_by_recovery_plan"},
          "recommendations": [
-             {"action": "accelerate_receivable", "cash_impact": 30_000, "title": "A"},
-             {"action": "draw_cash_buffer", "cash_impact": 10_000, "title": "B"},
+             {"action": "accelerate_receivable", "cash_impact": 30_000, "title": "A",
+              "resolves_breach": True},
          ]},
         {"shortfall": 25_000})
     applied = {s["rung"]: s["applied"] for s in ladder2["steps"]}

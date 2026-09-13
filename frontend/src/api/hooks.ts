@@ -3,6 +3,7 @@ import {
   connectAccount,
   fetchDashboard,
   fetchObligations,
+  fetchRecoveryLadder,
   fetchSetupStatus,
   isDemo,
   runSync,
@@ -12,7 +13,7 @@ import {
   simulateStress,
   uploadCfdi,
 } from './client';
-import type { StressRequest } from '@/types';
+import type { LadderRung, StressRequest } from '@/types';
 
 /** The account id comes from the server, derived from the session cookie. A copy kept in
  *  localStorage outlived logout and pointed the next user at the previous tenant (403). */
@@ -31,6 +32,17 @@ export function useStressSimulation(request: StressRequest) {
   return useQuery({
     queryKey: ['stress', request],
     queryFn: () => simulateStress(request),
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** The ladder with some rungs switched off. With none off, the dashboard's ladder already
+ *  is the answer, so nothing is fetched. */
+export function useRecoveryLadder(excluded: LadderRung[]) {
+  return useQuery({
+    queryKey: ['recovery', excluded],
+    queryFn: () => fetchRecoveryLadder(excluded),
+    enabled: !isDemo && excluded.length > 0,
     placeholderData: (previous) => previous,
   });
 }
@@ -65,6 +77,7 @@ function useIntegrationMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TRe
       queryClient.invalidateQueries({ queryKey: ['setup'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['obligations'] });
+      queryClient.invalidateQueries({ queryKey: ['recovery'] });
     },
   });
 }

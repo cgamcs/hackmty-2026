@@ -2,7 +2,7 @@
 // The real deterministic Python engine runs on the backend; this mirrors its rules
 // so the seeded demo numbers stay internally consistent.
 
-import type { Breach, ForecastPoint, GapKind, ISODate, Ladder, LadderStep, Payable, Receivable, RiskLevel } from '@/types';
+import type { Breach, ForecastPoint, GapKind, ISODate, Ladder, LadderRung, LadderStep, Payable, Receivable, RiskLevel } from '@/types';
 import { addDays, dayDiff, plural } from '@/lib/format';
 
 const RIGIDITY_ORDER = { hard: 0, slack: 1 } as const;
@@ -57,32 +57,41 @@ export function riskLevel(
   return { risk: breach.daysUntil <= 7 || residualPct >= 0.2 ? 'ALTO' : 'MEDIO', residualPct };
 }
 
-/** Phase 7 — cheapest first, credit last. Each rung is applied only while a gap remains. */
+/** Phase 7 — cheapest first, credit last. Demo-mode stand-in for the engine's ladder;
+ *  `excluded` mirrors the rungs the owner switched off in Recovery. */
 export function buildLadder(
   breach: Breach | null,
   gap: GapKind,
   receivables: Receivable[],
   payables: Payable[],
   buffer: number,
+  excluded: LadderRung[] = [],
 ): Ladder {
   if (!breach) {
     return { steps: [], residual: 0, creditAmount: 0, creditDeclined: false, adjustedMin: null };
   }
 
   // 1 — an open receivable landing after the breach that can be pulled forward.
-  const receivable = receivables
-    .filter((r) => r.accelerable && r.dueDate > breach.date)
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
+  const receivable = excluded.includes('ACCELERATE')
+    ? undefined
+    : receivables
+        .filter((r) => r.accelerable && r.dueDate > breach.date)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
   const daysEarly = receivable ? dayDiff(breach.date, receivable.dueDate) : 0;
 
   // 2 — a payable with slack that can move past the breach date.
-  const shiftable = payables
-    .filter((p) => p.rigidity === 'slack' && p.dueDate <= breach.date)
-    .filter((p) => addDays(p.dueDate, Math.min(p.slackDays, SHIFT_DAYS)) > breach.date)
-    .sort((a, b) => b.amount - a.amount)[0];
+  const shiftable = excluded.includes('SHIFT')
+    ? undefined
+    : payables
+        .filter((p) => p.rigidity === 'slack' && p.dueDate <= breach.date)
+        .filter((p) => addDays(p.dueDate, Math.min(p.slackDays, SHIFT_DAYS)) > breach.date)
+        .sort((a, b) => b.amount - a.amount)[0];
   const shiftDays = shiftable ? Math.min(shiftable.slackDays, SHIFT_DAYS) : 0;
 
-  const candidates: Omit<LadderStep, 'applied'>[] = [
+  // 3 — the cash buffer, unless the owner switched it off.
+  const useBuffer = buffer > 0 && !excluded.includes('BUFFER');
+
+  const candidates: Omit<LadderStep, 'applied' | 'resolves' | 'order'>[] = [
     {
       rung: 'ACCELERATE',
       short: '1 · Cobranza',
@@ -90,6 +99,7 @@ export function buildLadder(
       phrase: receivable ? `adelantando ${receivable.folio} ${plural(daysEarly, 'día', 'días')}` : '',
       closes: receivable?.amount ?? 0,
       available: Boolean(receivable),
+      actions: receivable ? [{ targetId: receivable.id, newDate: breach.date, amount: receivable.amount }] : [],
     },
     {
       rung: 'SHIFT',
@@ -98,33 +108,38 @@ export function buildLadder(
       phrase: shiftable ? `difiriendo ${shiftable.payee} ${plural(shiftDays, 'día', 'días')}` : '',
       closes: shiftable?.amount ?? 0,
       available: Boolean(shiftable),
+      actions: shiftable
+        ? [{ targetId: shiftable.id, newDate: addDays(shiftable.dueDate, shiftDays), amount: shiftable.amount }]
+        : [],
     },
     {
       rung: 'BUFFER',
-      short: '3 · Buffer',
-      title: 'Usar buffer de caja',
-      phrase: 'usando el buffer de caja',
-      closes: buffer,
-      available: buffer > 0,
+      short: '3 · Colchón',
+      title: 'Usar colchón de efectivo',
+      phrase: 'usando el colchón de efectivo',
+      closes: useBuffer ? buffer : 0,
+      available: useBuffer,
+      actions: useBuffer ? [{ targetId: '', newDate: null, amount: buffer }] : [],
     },
   ];
 
   if (gap === 'STRUCTURAL') {
     // Say so: the ladder cannot fix insolvency and credit makes it worse.
-    const steps = candidates.map((c) => ({ ...c, applied: false }));
-    steps.push({ rung: 'CREDIT', short: '4 · Crédito', title: 'Crédito · no recomendado', phrase: '', closes: 0, available: false, applied: false });
+    const steps: LadderStep[] = candidates.map((c) => ({ ...c, applied: false, resolves: false, order: null }));
+    steps.push({ rung: 'CREDIT', short: '4 · Crédito', title: 'Crédito · no recomendado', phrase: '', closes: 0, available: false, applied: false, resolves: false, order: null, actions: [] });
     return { steps, residual: breach.shortfall, creditAmount: 0, creditDeclined: true, adjustedMin: breach.balance };
   }
 
   let remaining = breach.shortfall;
   let closed = 0;
+  let order = 0;
   const steps: LadderStep[] = candidates.map((c) => {
     const applied = c.available && remaining > 0;
     if (applied) {
       remaining -= c.closes;
       closed += c.closes;
     }
-    return { ...c, applied };
+    return { ...c, applied, resolves: applied && remaining <= 0, order: applied ? ++order : null };
   });
   const residual = Math.max(0, remaining);
   const creditAmount = residual > 0 ? Math.ceil((residual * (1 + CREDIT_MARGIN)) / 1000) * 1000 : 0;
@@ -136,6 +151,9 @@ export function buildLadder(
     closes: creditAmount,
     available: residual > 0,
     applied: residual > 0,
+    resolves: residual > 0,
+    order: residual > 0 ? order + 1 : null,
+    actions: [],
   });
 
   return { steps, residual, creditAmount, creditDeclined: false, adjustedMin: breach.balance + closed };

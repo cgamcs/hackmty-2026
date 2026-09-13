@@ -329,6 +329,8 @@ decision support while the financial institution remains responsible for lending
 | POST | /api/obligations/{id} | Confirm rigidity and allowed slack. |
 | GET | /api/sme/{account_id} | Build the private SMB dashboard and forecast. |
 | POST | /api/stress | Run the Stress Lab against current company data. |
+| POST | /api/recovery | Re-run the recovery ladder without the rungs the owner switched off. |
+| POST | /api/buffer | Save the cash buffer the recovery ladder can draw on. |
 | GET | /api/health | Check API liveness. |
 
 ## Tests
