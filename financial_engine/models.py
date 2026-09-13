@@ -48,6 +48,7 @@ class Receivable:
     amount: float
     customer: str
     collection_probability: float = 0.80
+    # None: the client cannot be asked to pay early, so ladder rung 1 skips it.
     earliest_collection_date: date | None = None
     early_payment_discount: float = 0.02
 

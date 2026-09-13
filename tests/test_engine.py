@@ -166,14 +166,30 @@ class FinancialEngineTests(unittest.TestCase):
                 Obligation("payroll", TODAY + timedelta(days=4), 10_000, "Nómina", hard_deadline=True)
             ],
             receivables=[
-                Receivable("a", TODAY + timedelta(days=8), 8_000, "A", 0.9),
-                Receivable("b", TODAY + timedelta(days=9), 8_000, "B", 0.9),
+                Receivable("a", TODAY + timedelta(days=8), 8_000, "A", 0.9, TODAY + timedelta(days=1)),
+                Receivable("b", TODAY + timedelta(days=9), 8_000, "B", 0.9, TODAY + timedelta(days=1)),
             ],
         )
         result = self.engine.analyze(snapshot)
         self.assertEqual(len(result.recommendations), 2)
         self.assertFalse(result.recommendations[0].resolves_breach)
         self.assertTrue(result.recommendations[1].resolves_breach)
+
+    def test_receivable_without_early_date_is_not_accelerated(self) -> None:
+        # No earliest_collection_date means the client cannot credibly be asked to pay
+        # early (an erratic or unknown payer), so the ladder must skip it.
+        snapshot = BusinessSnapshot(
+            as_of=TODAY,
+            current_balance=1_000,
+            obligations=[
+                Obligation("payroll", TODAY + timedelta(days=4), 10_000, "Nómina", hard_deadline=True)
+            ],
+            receivables=[Receivable("erratic", TODAY + timedelta(days=8), 40_000, "Errático", 0.6)],
+        )
+        result = self.engine.analyze(snapshot)
+        self.assertIsNotNone(result.breach)
+        self.assertNotIn("accelerate_receivable", {item.action for item in result.recommendations})
+        self.assertEqual(result.financing_decision.status, FinancingStatus.RECOMMENDED)
 
     def test_normalized_json_can_build_snapshot(self) -> None:
         snapshot = snapshot_from_dict(
