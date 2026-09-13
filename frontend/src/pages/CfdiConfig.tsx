@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { QueryGate } from '@/components/QueryGate';
 import { Icon, Meter } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { mxn, shortDate } from '@/lib/format';
 import type { DashboardData } from '@/types';
 
@@ -16,11 +17,11 @@ import type { DashboardData } from '@/types';
  * recommendations.
  */
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Stat({ label, value, format, hint }: { label: string; value: number; format: (v: number) => string; hint?: string }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="eyebrow !text-[10px]">{label}</span>
-      <span className="text-[22px] tabular-nums tracking-[-.02em]">{value}</span>
+      <span className="text-[22px] tabular-nums tracking-[-.02em]"><AnimatedNumber value={value} format={format} /></span>
       {hint && <span className="text-[12px] text-dim">{hint}</span>}
     </div>
   );
@@ -70,22 +71,26 @@ function Body({ data }: { data: DashboardData }) {
       <section className="card grid grid-cols-2 gap-6 p-6 sm:grid-cols-4 sm:p-7">
         <Stat
           label="Por cobrar"
-          value={mxn(cfdi.receivableTotal)}
+          value={cfdi.receivableTotal}
+          format={mxn}
           hint={`${cfdi.receivableCount} facturas PPD abiertas`}
         />
         <Stat
           label="Por pagar"
-          value={mxn(cfdi.payableTotal)}
+          value={cfdi.payableTotal}
+          format={mxn}
           hint={`${cfdi.payableCount} de proveedor`}
         />
         <Stat
           label="Vencidas"
-          value={mxn(overdue.reduce((s, r) => s + r.amount, 0))}
+          value={overdue.reduce((s, r) => s + r.amount, 0)}
+          format={mxn}
           hint={`${overdue.length} pasaron su fecha`}
         />
         <Stat
           label="Conciliadas"
-          value={String(settled.length)}
+          value={settled.length}
+          format={(v) => String(Math.round(v))}
           hint="con movimiento en el banco"
         />
       </section>

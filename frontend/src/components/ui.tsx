@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { GapKind, RiskLevel } from '@/types';
+import { BarReveal } from '@/components/animate';
 
 type IconName =
   | 'arrowUpRight' | 'gear' | 'bell' | 'wallet' | 'alert' | 'coin' | 'chevronDown' | 'arrowUp'
@@ -83,13 +84,9 @@ export function scoreColor(score: number): string {
   return '#EF4444';
 }
 
-/** Thin horizontal meter used by the ladder and aging buckets. */
+/** Thin horizontal meter used by the ladder and aging buckets — fills in on scroll, same as the landing page's bars. */
 export function Meter({ pct, color, height = 10 }: { pct: number; color: string; height?: number }) {
-  return (
-    <div className="flex-1 rounded-full bg-ash/10" style={{ height }}>
-      {pct > 0 && <div className="h-full rounded-full" style={{ width: `${Math.min(100, Math.max(2, pct))}%`, background: color }} />}
-    </div>
-  );
+  return <BarReveal pct={pct} color={color} height={height} />;
 }
 
 export function SegmentedRange<T extends string | number>({

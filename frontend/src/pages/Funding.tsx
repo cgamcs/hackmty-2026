@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import type { DashboardData } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { Meter, SegmentedRange } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { mxn, compact } from '@/lib/format';
 
 // ─── Types & constants ────────────────────────────────────────────────
@@ -173,15 +174,15 @@ function FundingView({ d }: { d: DashboardData }) {
           <div className="grid grid-cols-3 gap-4 sm:gap-[18px]">
             <article className="card p-5">
               <div className="eyebrow mb-2">Monto</div>
-              <div className="num text-[26px] leading-none">{compact(amount)}</div>
+              <div className="num text-[26px] leading-none"><AnimatedNumber value={amount} format={compact} /></div>
             </article>
             <article className="card p-5">
               <div className="eyebrow mb-2">Plazo</div>
-              <div className="num text-[26px] leading-none">{term} días</div>
+              <div className="num text-[26px] leading-none"><AnimatedNumber value={term} format={(v) => `${Math.round(v)} días`} /></div>
             </article>
             <article className="card p-5">
               <div className="eyebrow mb-2">Opciones elegibles</div>
-              <div className="num text-[26px] leading-none">{eligible.length}</div>
+              <div className="num text-[26px] leading-none"><AnimatedNumber value={eligible.length} format={(v) => String(Math.round(v))} /></div>
             </article>
           </div>
 
@@ -226,15 +227,15 @@ function FundingView({ d }: { d: DashboardData }) {
                         <div className="flex flex-shrink-0 items-center gap-6">
                           <div className="text-right">
                             <div className="eyebrow mb-0.5">Tasa mensual</div>
-                            <div className="num text-[20px] font-semibold">{offer.monthlyRate}%</div>
+                            <div className="num text-[20px] font-semibold"><AnimatedNumber value={offer.monthlyRate} format={(v) => `${v.toFixed(1)}%`} /></div>
                           </div>
                           <div className="text-right">
                             <div className="eyebrow mb-0.5">CAT aprox</div>
-                            <div className="num text-[20px] text-dim">{cat.toFixed(1)}%</div>
+                            <div className="num text-[20px] text-dim"><AnimatedNumber value={cat} format={(v) => `${v.toFixed(1)}%`} /></div>
                           </div>
                           <div className="min-w-[90px] text-right">
                             <div className="eyebrow mb-0.5">Costo total</div>
-                            <div className={`num text-[20px] ${isBest ? 'text-bajo' : ''}`}>{compact(cost)}</div>
+                            <div className={`num text-[20px] ${isBest ? 'text-bajo' : ''}`}><AnimatedNumber value={cost} format={compact} /></div>
                           </div>
                         </div>
                       </div>
@@ -277,12 +278,12 @@ function OfferBreakdown({ offer, amount, term }: { offer: Offer; amount: number;
     <div className="mt-2 rounded-2xl border border-ash/10 bg-dim/8 p-4">
       <div className="eyebrow mb-3">Desglose del crédito</div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-[12.5px]">
-        <span className="text-dim">Capital</span><span className="num">{mxn(amount)}</span>
+        <span className="text-dim">Capital</span><span className="num"><AnimatedNumber value={amount} format={mxn} /></span>
         <span className="text-dim">Plazo</span><span className="num">{term} días</span>
-        <span className="text-dim">Tasa diaria</span><span className="num">{(offer.monthlyRate / 30).toFixed(3)}%</span>
-        <span className="text-dim">Costo del crédito</span><span className="num text-alto">{mxn(cost)}</span>
-        <span className="text-dim">Pago total al vencimiento</span><span className="num">{mxn(amount + cost)}</span>
-        <span className="text-dim">CAT aproximado</span><span className="num">{annualizedRate(offer.monthlyRate).toFixed(1)}% anual</span>
+        <span className="text-dim">Tasa diaria</span><span className="num"><AnimatedNumber value={offer.monthlyRate / 30} format={(v) => `${v.toFixed(3)}%`} /></span>
+        <span className="text-dim">Costo del crédito</span><span className="num text-alto"><AnimatedNumber value={cost} format={mxn} /></span>
+        <span className="text-dim">Pago total al vencimiento</span><span className="num"><AnimatedNumber value={amount + cost} format={mxn} /></span>
+        <span className="text-dim">CAT aproximado</span><span className="num"><AnimatedNumber value={annualizedRate(offer.monthlyRate)} format={(v) => `${v.toFixed(1)}% anual`} /></span>
       </div>
       <div className="mt-3 text-[11px] text-dim">
         * Valores indicativos. La tasa definitiva depende del análisis crediticio del banco.

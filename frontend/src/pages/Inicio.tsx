@@ -1,6 +1,7 @@
 import type { DashboardData, Payable, Receivable } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { ArrowLink, Icon, Meter, Tag } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { HealthGauge } from '@/components/charts/HealthGauge';
 import { compact, dayDiff, greeting, mxn, shortDate } from '@/lib/format';
 
@@ -28,9 +29,9 @@ function InicioView({ d }: { d: DashboardData }) {
           </div>
         </div>
         <div className="flex min-w-0 max-w-full flex-wrap items-start gap-x-11 gap-y-4">
-          <Numeral value={compact(d.account.balance)} icon="wallet" label="Balance hoy" />
-          <Numeral value={breach ? String(breach.daysUntil) : '—'} icon="alert" label={breach ? 'Días al breach' : 'Sin breach en 30 d'} />
-          <Numeral value={breach ? compact(breach.shortfall) : '$0'} icon="coin" label={breach ? `Faltante ${shortDate(breach.date)}` : 'Sin faltante'} />
+          <Numeral value={d.account.balance} format={compact} icon="wallet" label="Balance hoy" />
+          <Numeral value={breach ? breach.daysUntil : null} format={(v) => String(Math.round(v))} fallback="—" icon="alert" label={breach ? 'Días al breach' : 'Sin breach en 30 d'} />
+          <Numeral value={breach ? breach.shortfall : null} format={compact} fallback="$0" icon="coin" label={breach ? `Faltante ${shortDate(breach.date)}` : 'Sin faltante'} />
         </div>
       </section>
 
@@ -49,7 +50,7 @@ function InicioView({ d }: { d: DashboardData }) {
               <ArrowLink to="/forecast" label="Ver predicción" solid size={34} />
             </div>
             <div>
-              <div className="num text-[46px] leading-none tracking-[-.035em]">{breach.daysUntil} días</div>
+              <div className="num text-[46px] leading-none tracking-[-.035em]"><AnimatedNumber value={breach.daysUntil} format={(v) => `${Math.round(v)} días`} /></div>
               <div className="mt-2 text-[12.5px] text-ash">
                 Faltante {mxn(breach.shortfall)} · {breachVerdict(d)}
               </div>
@@ -109,10 +110,16 @@ function Stat({ label, value, className }: { label: string; value: string; class
   );
 }
 
-function Numeral({ value, icon, label }: { value: string; icon: 'wallet' | 'alert' | 'coin'; label: string }) {
+function Numeral({
+  value, format, fallback = '—', icon, label,
+}: {
+  value: number | null; format: (v: number) => string; fallback?: string; icon: 'wallet' | 'alert' | 'coin'; label: string;
+}) {
   return (
     <div>
-      <div className="num text-[clamp(36px,8vw,58px)] leading-none tracking-[-.04em]">{value}</div>
+      <div className="num text-[clamp(36px,8vw,58px)] leading-none tracking-[-.04em]">
+        {value === null ? fallback : <AnimatedNumber value={value} format={format} />}
+      </div>
       <div className="mt-2 flex items-center gap-[7px]">
         <Icon name={icon} size={14} color="#6D7275" strokeWidth={1.3} />
         <span className="text-[12.5px] text-dim">{label}</span>

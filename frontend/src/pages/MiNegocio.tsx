@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { DashboardData, ObligationKind } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { ArrowLink, GapChip, Icon, Meter, SegmentedRange, scoreColor } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { CashFlowBars } from '@/components/charts/CashFlowBars';
 import { compact, mxn, paddedDate, shortDate } from '@/lib/format';
 import { useSession, type Range } from '@/store/session';
@@ -65,13 +66,13 @@ function MiNegocioView({ d }: { d: DashboardData }) {
             <ArrowLink to="/forecast" label="Ver proyección" />
           </div>
           <div className="mt-[18px]">
-            <div className="num text-[44px] leading-none tracking-[-.035em]">{mxn(d.account.balance)}</div>
+            <div className="num text-[44px] leading-none tracking-[-.035em]"><AnimatedNumber value={d.account.balance} format={mxn} /></div>
             <div className="mt-[9px] text-[12.5px] text-dim">MXN · {d.account.balanceAt}</div>
           </div>
           <div className="mt-[22px] flex gap-[30px] border-t border-ash/14 pt-[18px]">
-            <MiniStat label="Health" value={String(d.healthScore)} color={scoreColor(d.healthScore)} />
-            <MiniStat label="Resilience" value={String(d.resilienceScore)} color={scoreColor(d.resilienceScore)} />
-            <MiniStat label="Neto 30 d" value={compact(net30, { currency: false, signed: true })} color={net30 >= 0 ? '#22C55E' : '#EF4444'} />
+            <MiniStat label="Health" value={d.healthScore} format={(v) => String(Math.round(v))} color={scoreColor(d.healthScore)} />
+            <MiniStat label="Resilience" value={d.resilienceScore} format={(v) => String(Math.round(v))} color={scoreColor(d.resilienceScore)} />
+            <MiniStat label="Neto 30 d" value={net30} format={(v) => compact(v, { currency: false, signed: true })} color={net30 >= 0 ? '#22C55E' : '#EF4444'} />
           </div>
         </article>
 
@@ -81,7 +82,7 @@ function MiNegocioView({ d }: { d: DashboardData }) {
             <div>
               <h2 className="m-0 text-[17px] font-medium">Flujo de caja</h2>
               <div className="mt-2.5 flex items-baseline gap-2.5">
-                <div className="num text-[34px] leading-none tracking-[-.03em]">{compact(netFlow)}</div>
+                <div className="num text-[34px] leading-none tracking-[-.03em]"><AnimatedNumber value={netFlow} format={compact} /></div>
                 <div className="text-[12.5px] leading-[1.3] text-dim">
                   neto
                   <br />
@@ -104,7 +105,7 @@ function MiNegocioView({ d }: { d: DashboardData }) {
               <div className="eyebrow">Ingresos · 30 d</div>
               <Delta pct={d.income30.changePct} goodWhenUp />
             </div>
-            <div className="num mt-2 text-[32px] tracking-[-.03em]">{mxn(d.income30.total)}</div>
+            <div className="num mt-2 text-[32px] tracking-[-.03em]"><AnimatedNumber value={d.income30.total} format={mxn} /></div>
             <div className="mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden="true">
               <div className="bg-ember" style={{ width: `${(d.income30.cash / d.income30.total) * 100}%` }} />
               <div className="flex-1 bg-dim/60" />
@@ -120,7 +121,7 @@ function MiNegocioView({ d }: { d: DashboardData }) {
               <div className="eyebrow">Gastos · 30 d</div>
               <Delta pct={d.expense30.changePct} />
             </div>
-            <div className="num mt-2 text-[32px] tracking-[-.03em]">{mxn(d.expense30.total)}</div>
+            <div className="num mt-2 text-[32px] tracking-[-.03em]"><AnimatedNumber value={d.expense30.total} format={mxn} /></div>
             <div className="mt-3.5 flex flex-col gap-2">
               {d.expense30.lines.map((l) => (
                 <div key={l.label} className="flex justify-between text-[12.5px]">
@@ -244,12 +245,12 @@ function MiNegocioView({ d }: { d: DashboardData }) {
   );
 }
 
-function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
+function MiniStat({ label, value, format, color }: { label: string; value: number; format: (v: number) => string; color: string }) {
   return (
     <div>
       <div className="eyebrow !text-[10px] !tracking-[.12em]">{label}</div>
       <div className="num mt-[5px] text-[26px]" style={{ color }}>
-        {value}
+        <AnimatedNumber value={value} format={format} />
       </div>
     </div>
   );
@@ -269,7 +270,7 @@ function CfdiTotal({ label, total, count }: { label: string; total: number; coun
   return (
     <div>
       <div className="text-[11.5px] text-dim">{label}</div>
-      <div className="num mt-[5px] text-[26px]">{mxn(total)}</div>
+      <div className="num mt-[5px] text-[26px]"><AnimatedNumber value={total} format={mxn} /></div>
       <div className="mt-[3px] font-mono text-[10.5px] text-dim">{count} facturas</div>
     </div>
   );

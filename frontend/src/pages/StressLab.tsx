@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStressSimulation } from '@/api/hooks';
 import { ForecastChart } from '@/components/charts/ForecastChart';
 import { GapChip, Icon, RISK_STYLE } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { compact, dayDiff, mxn, shortDate } from '@/lib/format';
 import type { Breach, ForecastPoint, GapKind, StressRequest } from '@/types';
 
@@ -120,10 +121,10 @@ export default function StressLab() {
 
         <div className="flex flex-col gap-4 sm:gap-[18px]">
           <div className="grid grid-cols-2 gap-4 sm:gap-[18px] xl:grid-cols-4">
-            <KpiCard eyebrow="Health Score" value={`${result.health_score}/100`} sub={`base ${baseline.health_score}`} color="#ECEBF3" />
-            <KpiCard eyebrow="Resilience Score" value={`${result.resilience_score}/100`} sub={`base ${baseline.resilience_score}`} color="#ECEBF3" />
-            <KpiCard eyebrow="Días al incumplimiento" value={breach ? String(breach.daysUntil) : '—'} sub={breach ? shortDate(breach.date) : 'sin brecha'} color={breach ? '#EF4444' : '#22C55E'} />
-            <KpiCard eyebrow="Peor saldo pesimista" value={compact(result.diagnostics.minimum_pessimistic_balance)} sub="en los próximos 30 días" color={breach ? '#EF4444' : '#22C55E'} />
+            <KpiCard eyebrow="Health Score" value={result.health_score} format={(v) => `${Math.round(v)}/100`} sub={`base ${baseline.health_score}`} color="#ECEBF3" />
+            <KpiCard eyebrow="Resilience Score" value={result.resilience_score} format={(v) => `${Math.round(v)}/100`} sub={`base ${baseline.resilience_score}`} color="#ECEBF3" />
+            <KpiCard eyebrow="Días al incumplimiento" value={breach ? breach.daysUntil : null} format={(v) => String(Math.round(v))} sub={breach ? shortDate(breach.date) : 'sin brecha'} color={breach ? '#EF4444' : '#22C55E'} />
+            <KpiCard eyebrow="Peor saldo pesimista" value={result.diagnostics.minimum_pessimistic_balance} format={compact} sub="en los próximos 30 días" color={breach ? '#EF4444' : '#22C55E'} />
           </div>
 
           <article className="card flex h-[clamp(260px,35vw,410px)] flex-col px-4 pb-[22px] pt-[26px] sm:px-[30px]">
@@ -146,7 +147,7 @@ export default function StressLab() {
             <article className="card-alert flex flex-col gap-4 p-6">
               <div className="eyebrow">Primera obligación descubierta</div>
               <div className="text-[20px] font-medium">{breach.obligation.payee}</div>
-              <div className="flex flex-wrap gap-6"><StatPair label="Monto" value={mxn(breach.obligation.amount)} /><StatPair label="Vence" value={shortDate(breach.date)} /><StatPair label="Balance disponible" value={mxn(breach.balance)} /><StatPair label="Faltante" value={mxn(breach.shortfall)} color="#EF4444" /></div>
+              <div className="flex flex-wrap gap-6"><StatPair label="Monto" raw={breach.obligation.amount} format={mxn} /><StatPair label="Vence" value={shortDate(breach.date)} /><StatPair label="Balance disponible" raw={breach.balance} format={mxn} /><StatPair label="Faltante" raw={breach.shortfall} format={mxn} color="#EF4444" /></div>
             </article>
           ) : <HealthyState />}
         </div>
@@ -161,7 +162,7 @@ export default function StressLab() {
           <div className="eyebrow mb-4">Decisión de financiamiento</div>
           <div className="text-[22px] font-medium">{result.financing_decision.should_suggest ? 'Crédito puente recomendado' : 'No sugerir crédito'}</div>
           <p className="mt-3 text-[13px] leading-relaxed text-dim">{result.financing_decision.reason}</p>
-          <div className="mt-6 flex flex-wrap gap-8"><StatPair label="Faltante residual" value={mxn(result.financing_decision.residual_shortfall)} /><StatPair label="Monto sugerido" value={mxn(result.financing_decision.suggested_amount)} color={result.financing_decision.should_suggest ? '#C20114' : undefined} /><StatPair label="Plazo" value={`${result.financing_decision.term_days} días`} /></div>
+          <div className="mt-6 flex flex-wrap gap-8"><StatPair label="Faltante residual" raw={result.financing_decision.residual_shortfall} format={mxn} /><StatPair label="Monto sugerido" raw={result.financing_decision.suggested_amount} format={mxn} color={result.financing_decision.should_suggest ? '#C20114' : undefined} /><StatPair label="Plazo" value={`${result.financing_decision.term_days} días`} /></div>
         </article>
       </section>
     </>
@@ -191,10 +192,25 @@ function SliderRow({ label, value, min, max, step, format, positiveIsGood, onCha
   return <div className="flex flex-col gap-2"><div className="flex items-center justify-between"><div className="eyebrow">{label}</div><div className="num text-[16px] font-medium" style={{ color }}>{format(value)}</div></div><input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} className="w-full cursor-pointer" style={{ accentColor: '#C20114' }} /><div className="flex justify-between font-mono text-[10px] text-dim/60"><span>{format(min)}</span><span>{format(max)}</span></div></div>;
 }
 
-function KpiCard({ eyebrow, value, sub, color }: { eyebrow: string; value: string; sub: string; color: string }) {
-  return <article className="card flex flex-col p-5"><div className="eyebrow mb-3">{eyebrow}</div><div className="num text-[28px] leading-none tracking-[-.03em]" style={{ color }}>{value}</div><div className="mt-2 truncate text-[11.5px] text-dim">{sub}</div></article>;
+function KpiCard({ eyebrow, value, format, sub, color }: { eyebrow: string; value: number | null; format: (v: number) => string; sub: string; color: string }) {
+  return (
+    <article className="card flex flex-col p-5">
+      <div className="eyebrow mb-3">{eyebrow}</div>
+      <div className="num text-[28px] leading-none tracking-[-.03em]" style={{ color }}>
+        {value === null ? '—' : <AnimatedNumber value={value} format={format} />}
+      </div>
+      <div className="mt-2 truncate text-[11.5px] text-dim">{sub}</div>
+    </article>
+  );
 }
 
-function StatPair({ label, value, color }: { label: string; value: string; color?: string }) {
-  return <div><div className="eyebrow mb-1">{label}</div><div className="num text-[18px]" style={{ color }}>{value}</div></div>;
+function StatPair({ label, value, raw, format, color }: { label: string; value?: string; raw?: number; format?: (v: number) => string; color?: string }) {
+  return (
+    <div>
+      <div className="eyebrow mb-1">{label}</div>
+      <div className="num text-[18px]" style={{ color }}>
+        {raw !== undefined && format ? <AnimatedNumber value={raw} format={format} /> : value}
+      </div>
+    </div>
+  );
 }

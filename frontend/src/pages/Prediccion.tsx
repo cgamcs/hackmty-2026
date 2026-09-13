@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import type { DashboardData } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { ArrowLink, Icon, RISK_STYLE, SegmentedRange } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { ForecastChart } from '@/components/charts/ForecastChart';
 import { mxn, shortDate } from '@/lib/format';
 
@@ -73,7 +74,9 @@ function PrediccionView({ d }: { d: DashboardData }) {
         </div>
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-4">
           <div className="text-right">
-            <div className="num text-[42px] leading-none tracking-[-.035em]">{d.breach ? d.breach.daysUntil : '—'}</div>
+            <div className="num text-[42px] leading-none tracking-[-.035em]">
+              {d.breach ? <AnimatedNumber value={d.breach.daysUntil} format={(v) => String(Math.round(v))} /> : '—'}
+            </div>
             <div className="mt-1.5 text-xs text-dim">días al incumplimiento</div>
           </div>
           <div className="h-[52px] w-px bg-ash/16" />
@@ -101,7 +104,9 @@ function PrediccionView({ d }: { d: DashboardData }) {
           <div>
             <h2 className="m-0 text-[19px] font-medium">Balance proyectado</h2>
             <div className="mt-2.5 flex items-baseline gap-3">
-              <div className="num text-[40px] leading-none tracking-[-.035em]">{mxn(d.breach?.balance ?? Math.min(...d.forecast.map((p) => p.pessimistic)))}</div>
+              <div className="num text-[40px] leading-none tracking-[-.035em]">
+                <AnimatedNumber value={d.breach?.balance ?? Math.min(...d.forecast.map((p) => p.pessimistic))} format={mxn} />
+              </div>
               <div className="text-[13px] text-dim">mínimo pesimista{d.breach ? ` · ${shortDate(d.breach.date)}` : ''}</div>
             </div>
           </div>
@@ -215,7 +220,7 @@ function CreditCard({ d, onSimulate }: { d: DashboardData; onSimulate: () => voi
           <div className="mt-1.5 flex items-end justify-between border-t border-ash/13 pt-3.5">
             <div>
               <div className="eyebrow !text-[10px] !tracking-[.12em]">Mínimo ajustado</div>
-              <div className={`num mt-1 text-[28px] ${ladder.creditDeclined ? 'text-critico' : 'text-bajo'}`}>{mxn(ladder.adjustedMin ?? 0)}</div>
+              <div className={`num mt-1 text-[28px] ${ladder.creditDeclined ? 'text-critico' : 'text-bajo'}`}><AnimatedNumber value={ladder.adjustedMin ?? 0} format={mxn} /></div>
             </div>
             <button type="button" onClick={onSimulate} className="h-9 rounded-full bg-ember px-[18px] text-[12.5px] font-medium hover:bg-ember/85">
               Simular

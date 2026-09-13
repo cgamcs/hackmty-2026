@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Reveal, CountNum, DrawPolyline, TiltCard, BarReveal } from '@/components/animate';
 
 // ─── Scroll progress ──────────────────────────────────────────────────────────
 
@@ -37,171 +38,9 @@ function LandingAnimations() {
   return null;
 }
 
-// ─── Reveal (up / left / right / scale / fade) ────────────────────────────────
-
-type RevealDir = 'up' | 'left' | 'right' | 'scale' | 'fade';
-
-function getRevealFrom(dir: RevealDir): string {
-  if (dir === 'left') return 'translateX(-28px)';
-  if (dir === 'right') return 'translateX(28px)';
-  if (dir === 'scale') return 'scale(0.94)';
-  if (dir === 'fade') return 'none';
-  return 'translateY(20px)';
-}
-
-function Reveal({
-  children, delay = 0, className = '', dir = 'up', as: Tag = 'div',
-}: {
-  children: React.ReactNode; delay?: number; className?: string; dir?: RevealDir; as?: React.ElementType;
-}) {
-  const ref = useRef<HTMLElement>(null);
-  const [on, setOn] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setOn(true); obs.disconnect(); } },
-      { threshold: 0.06, rootMargin: '0px 0px -32px 0px' },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <Tag
-      ref={ref}
-      className={className}
-      style={{
-        opacity: on ? 1 : 0,
-        transform: on ? 'none' : getRevealFrom(dir),
-        transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms`,
-      }}
-    >
-      {children}
-    </Tag>
-  );
-}
-
-// ─── CountUp ──────────────────────────────────────────────────────────────────
-
-function useCountUp(target: number, duration = 1200) {
-  const ref = useRef<HTMLElement>(null);
-  const [val, setVal] = useState<number | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        obs.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const t = Math.min(1, (now - start) / duration);
-          const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-          setVal(Math.round(ease * target));
-          if (t < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      },
-      { threshold: 0.5 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [target, duration]);
-  return { ref, val: val ?? 0 };
-}
-
-function CountNum({ value, prefix = '', suffix = '', className = '' }: { value: number; prefix?: string; suffix?: string; className?: string }) {
-  const { ref, val } = useCountUp(value);
-  const abs = Math.abs(val);
-  const formatted = abs >= 1000 ? abs.toLocaleString('es-MX') : String(abs);
-  const sign = value < 0 ? '-' : '';
-  return (
-    <span ref={ref as React.RefObject<HTMLSpanElement>} className={className}>
-      {sign}{prefix}{formatted}{suffix}
-    </span>
-  );
-}
-
-// ─── DrawPolyline ─────────────────────────────────────────────────────────────
-
-function DrawPolyline({ delay = 0, ...rest }: React.SVGProps<SVGPolylineElement> & { delay?: number }) {
-  const ref = useRef<SVGPolylineElement>(null);
-  const [drawn, setDrawn] = useState(false);
-  const [len, setLen] = useState(0);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const length = (el as SVGGeometryElement).getTotalLength?.() ?? 400;
-    setLen(length);
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setDrawn(true); obs.disconnect(); } },
-      { threshold: 0.1 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <polyline
-      ref={ref}
-      strokeDasharray={len || undefined}
-      strokeDashoffset={drawn ? 0 : (len || undefined)}
-      style={{ transition: drawn ? `stroke-dashoffset 1.2s ease ${delay}ms` : 'none' }}
-      {...rest}
-    />
-  );
-}
-
-// ─── TiltCard ─────────────────────────────────────────────────────────────────
-
-function TiltCard({ children, className = '', style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    el.style.transform = `perspective(900px) rotateY(${x * 6}deg) rotateX(${-y * 4}deg)`;
-  }, []);
-  const reset = useCallback(() => {
-    if (ref.current) ref.current.style.transform = 'perspective(900px) rotateY(0deg) rotateX(0deg)';
-  }, []);
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{ ...style, transformStyle: 'preserve-3d', transition: 'transform 0.3s ease' }}
-      onMouseMove={handleMove}
-      onMouseLeave={reset}
-    >
-      {children}
-    </div>
-  );
-}
-
-// ─── BarReveal ────────────────────────────────────────────────────────────────
-
-function BarReveal({ pct }: { pct: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setW(pct); obs.disconnect(); } },
-      { threshold: 0.5 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [pct]);
-  return (
-    <div ref={ref} className="mt-5 h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(199,214,213,0.10)' }}>
-      <div className="h-full rounded-full bg-ember" style={{ width: `${w}%`, transition: 'width 1s ease 200ms' }} />
-    </div>
-  );
-}
-
 // ─── Nav ──────────────────────────────────────────────────────────────────────
+// Reveal / CountNum / DrawPolyline / TiltCard / BarReveal now live in @/components/animate,
+// shared with the rest of the app.
 
 const NAV_SECTIONS = [
   { label: 'El problema', id: 'problema' },
@@ -807,7 +646,7 @@ function Mercado() {
               style={{ background: m.dark ? '#060906' : 'rgba(109,114,117,0.13)', border: '1px solid rgba(199,214,213,0.10)' }}>
               <div className="font-mono text-[10.5px] uppercase tracking-[.12em] text-dim">{m.label}</div>
               <div className="num mt-[14px] leading-none tracking-[-.035em]" style={{ fontSize: 'clamp(34px,4.4vw,56px)', fontWeight: 400, color: m.color }}>{m.value}</div>
-              <BarReveal pct={m.bar} />
+              <div className="mt-5"><BarReveal pct={m.bar} color="#C20114" height={6} /></div>
               <p className="mt-4 text-[13.5px] leading-[1.6] text-dim">{m.body}</p>
             </div>
           </Reveal>

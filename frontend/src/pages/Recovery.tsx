@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { DashboardData, LadderRung, Receivable, Payable } from '@/types';
 import { QueryGate } from '@/components/QueryGate';
 import { Icon, Meter, RISK_STYLE } from '@/components/ui';
+import { AnimatedNumber } from '@/components/animate';
 import { mxn, compact, shortDate, addDays, dayDiff } from '@/lib/format';
 import { SHIFT_DAYS, CREDIT_MARGIN } from '@/mock/engine';
 
@@ -79,7 +80,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
             <div className="h-10 w-px bg-ash/16" />
             <div>
               <div className="eyebrow !text-[10px]">Faltante</div>
-              <div className="num text-[26px] font-semibold leading-[1.15] text-alto">{compact(breach.shortfall)}</div>
+              <div className="num text-[26px] font-semibold leading-[1.15] text-alto"><AnimatedNumber value={breach.shortfall} format={compact} /></div>
             </div>
           </div>
         )}
@@ -163,7 +164,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
                 <div className="flex items-baseline justify-between">
                   <span className="text-[13px] text-dim">Residual</span>
                   <span className={`num text-[22px] font-semibold ${gapClosed ? 'text-bajo' : 'text-alto'}`}>
-                    {gapClosed ? '$0' : mxn(residual)}
+                    {gapClosed ? '$0' : <AnimatedNumber value={residual} format={mxn} />}
                   </span>
                 </div>
               </div>
@@ -176,7 +177,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
               ) : (
                 <div className="mt-5">
                   <div className="mb-2 text-[12px] text-dim">Crédito puente sugerido</div>
-                  <div className="num text-[32px] font-semibold text-alto">{mxn(creditAmount)}</div>
+                  <div className="num text-[32px] font-semibold text-alto"><AnimatedNumber value={creditAmount} format={mxn} /></div>
                   <div className="mt-1 text-[11.5px] text-dim">residual + {Math.round(CREDIT_MARGIN * 100)}% margen</div>
                   <button
                     type="button"
@@ -192,7 +193,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
             <article className="card flex flex-col gap-4 p-6">
               <div className="eyebrow">Cobertura de la brecha</div>
               <div className="num text-[36px] leading-none tracking-[-.03em]">
-                {Math.min(100, Math.round(((shortfall - residual) / shortfall) * 100))}
+                <AnimatedNumber value={Math.min(100, Math.round(((shortfall - residual) / shortfall) * 100))} format={(v) => String(Math.round(v))} />
                 <span className="text-[18px] text-dim">%</span>
               </div>
               <Meter pct={Math.min(100, ((shortfall - residual) / shortfall) * 100)} color={gapClosed ? '#22C55E' : '#C20114'} height={10} />
@@ -212,7 +213,7 @@ function RecoveryView({ d }: { d: DashboardData }) {
               <article className="card-ink flex flex-col gap-2 p-6">
                 <div className="eyebrow mb-1">Mínimo ajustado</div>
                 <div className={`num text-[32px] ${gapClosed ? 'text-bajo' : 'text-alto'}`}>
-                  {mxn(ladder.adjustedMin)}
+                  <AnimatedNumber value={ladder.adjustedMin} format={mxn} />
                 </div>
                 <div className="text-[11.5px] text-dim">
                   balance pesimista después de aplicar los peldaños activos
