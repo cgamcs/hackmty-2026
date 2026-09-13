@@ -31,7 +31,7 @@ export function QueryGate({ children }: { children: (data: DashboardData) => Rea
   }
 
   if (!data) {
-    // First-run gate (CONCEPT §6): nothing to show until CFDI + bank are connected.
+    // First-run gate: nothing to show until CFDI + bank are connected.
     return (
       <div className="card flex flex-col items-start gap-5 p-10">
         <div className="eyebrow">Primer paso</div>

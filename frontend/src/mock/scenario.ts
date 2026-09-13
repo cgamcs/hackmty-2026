@@ -1,5 +1,4 @@
-// "Timing gap" scenario (CONCEPT.md §8): net positive over 30 days, dips below
-// payroll on 6 oct. Forecast values are taken from the Claude Design handoff.
+// Seeded timing-gap demo: net positive over 30 days, but it dips below payroll.
 
 import type { DailyFlow, DashboardData, ForecastPoint, OperatingAccount, Payable, Receivable } from '@/types';
 import { addDays } from '@/lib/format';

@@ -1,4 +1,4 @@
-// Domain types mirroring the FastAPI contract described in CONCEPT.md.
+// Domain types mirroring the FastAPI contract documented in README.md.
 // CFDI = obligation layer, Nessie = settlement layer.
 
 export type ISODate = string;
@@ -8,7 +8,7 @@ export type GapKind = 'NONE' | 'TIMING' | 'STRUCTURAL';
 
 export type RiskLevel = 'BAJO' | 'MEDIO' | 'ALTO' | 'CRITICO';
 
-/** Obligation rigidity (CONCEPT §7): payroll and taxes are hard, supplier PPD has slack. */
+/** Payroll and taxes are hard obligations; a supplier PPD may have proven slack. */
 export type Rigidity = 'hard' | 'slack';
 
 export type ObligationKind = 'PAYROLL' | 'TAXES' | 'SUPPLIER' | 'RENT';

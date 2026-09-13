@@ -1,65 +1,42 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
+# Secrets and local environment
+.env
+*.env
+!.env.example
+*credentials.env
 *.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/app/generated/prisma
-
-.env
+# Python
 .venv/
+venv/
 __pycache__/
+*.py[cod]
+.pytest_cache/
 
-.atl/
-.claude/
-
-# Internal planning docs
-frontend.md
-
-# Claude Design handoff bundle (reference only)
-frontend/makeupDesign/
-
-# nested dependencies / builds
+# Node / frontend
 node_modules/
 frontend/dist/
 frontend/.vite/
+*.tsbuildinfo
+.pnp
+.pnp.js
+.yarn/
 
-# credenciales — nunca commitear
-*credentials.env
-*.env
-!.env.example
+# Tests and tooling
+coverage/
+.atl/
+.claude/
+.vercel/
 
-# python build artifacts
-__pycache__/
-*.py[cod]
+# Local design and planning material
+frontend.md
+frontend/makeupDesign/
+
+# OS and editor noise
+.DS_Store
+*.swp
+*~
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

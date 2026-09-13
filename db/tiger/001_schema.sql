@@ -176,7 +176,7 @@ create table if not exists suppressions (
 comment on table suppressions is
   'Self-expiring credit suppression, written when a run returns financing_status = '
   'not_recommended_structural. Deliberately NOT a blacklist: it expires on its own and '
-  'lifts when the verdict stops being structural. See CONCEPT.md section 7.';
+  'lifts when the verdict stops being structural. See README.md, Financial engine.';
 
 -- ── continuous aggregate: daily net flow per tenant ──────────────────────────
 -- The forecast's baseline and day-of-week factors are built from daily totals. Letting

@@ -268,8 +268,8 @@ def snapshot_from_live_nessie(
             payee=item.invoice.counterparty_name,
             category="supplier",
             hard_deadline=False,
-            # CONCEPT.md: silence is zero slack. A later persistence layer can
-            # populate this only from proven supplier tolerance.
+            # Silence is zero slack. Persistence may populate this only from
+            # proven supplier tolerance.
             slack_days=0,
             relationship_cost=0.0,
         )

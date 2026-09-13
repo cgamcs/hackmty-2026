@@ -1,6 +1,6 @@
-// Client-side stand-in for the FastAPI engine (CONCEPT.md phases 5–7), used only
-// when VITE_API_BASE_URL is unset. The real engine runs in Pandas on the backend;
-// this mirrors its rules so the demo numbers stay internally consistent.
+// Client-side stand-in for the FastAPI engine, used only with VITE_DEMO=1.
+// The real deterministic Python engine runs on the backend; this mirrors its rules
+// so the seeded demo numbers stay internally consistent.
 
 import type { Breach, ForecastPoint, GapKind, ISODate, Ladder, LadderStep, Payable, Receivable, RiskLevel } from '@/types';
 import { addDays, dayDiff, plural } from '@/lib/format';

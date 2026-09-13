@@ -415,8 +415,8 @@ def project(api: Nessie, entry: dict, horizon: int = 30) -> dict:
     inflow_per_day = sum(d.get("amount", 0) for d in deposits) / days
     outflow_per_day = sum(p.get("amount", 0) for p in purchases) / days
 
-    # Open receivables landing inside the horizon. CONCEPT.md Phase 4 includes this
-    # term; omitting it makes every credit-selling business read as structural.
+    # Open receivables landing inside the horizon. Omitting this term makes every
+    # credit-selling business read as structural.
     COLLECTION_PROBABILITY = 0.85
     NET_TERMS = 30
     expected: dict[str, float] = {}
