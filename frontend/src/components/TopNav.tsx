@@ -18,9 +18,12 @@ const NAV = [
 
 export function Brand() {
   return (
-    <Link to="/dashboard" className="glass flex h-11 flex-none items-center gap-2.5 rounded-full pl-[16px] pr-[20px] sm:h-12 sm:pl-[18px] sm:pr-[22px]">
-      <img src="/brand/beel-sun.svg" alt="" aria-hidden="true" className="size-5 sm:size-6" />
-      <span className="text-[17px] font-medium tracking-[-.01em] sm:text-[19px]">Beel</span>
+    <Link
+      to="/dashboard"
+      aria-label="Beel — Inicio"
+      className="glass flex h-11 flex-none items-center rounded-full px-[16px] sm:h-12 sm:px-[18px]"
+    >
+      <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-6 w-auto sm:h-7" />
     </Link>
   );
 }
