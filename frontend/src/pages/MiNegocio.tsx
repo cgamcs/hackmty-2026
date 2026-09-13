@@ -50,7 +50,7 @@ function MiNegocioView({ d }: { d: DashboardData }) {
           </div>
         </div>
         <div className="flex flex-none items-center gap-3.5">
-          <SegmentedRange options={RANGES} value={range} onChange={setRange} />
+          <SegmentedRange options={RANGES} value={range} onChange={setRange} disabled={[60, 90]} />
           <button type="button" onClick={runForecast} className="h-11 whitespace-nowrap rounded-full bg-ember px-[22px] text-[13.5px] font-medium hover:bg-ember/85">
             Correr forecast
           </button>
