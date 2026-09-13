@@ -73,9 +73,13 @@ function Nav() {
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between gap-4 py-[18px]"
       style={{ background: 'linear-gradient(#0C120C 60%, rgba(12,18,12,0.86) 88%, rgba(12,18,12,0))' }}>
-      <a href="#top" className="flex flex-none items-center gap-[10px] rounded-full border border-ash/20 px-5 py-0" style={{ height: 46 }}>
-        <span className="size-[18px] rounded-[6px] bg-ember flex-none" />
-        <span className="text-[18px] font-medium tracking-[-.01em]">Puente</span>
+      <a
+        href="#top"
+        aria-label="Beel — Inicio"
+        className="flex flex-none items-center rounded-full border border-ash/20 px-5 py-0"
+        style={{ height: 46 }}
+      >
+        <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-7 w-auto" />
       </a>
       {scrolled && (
         <div className="hidden items-center gap-0.5 md:flex"
@@ -184,13 +188,13 @@ function Hero() {
 
       <h1 style={{ margin: '26px auto 0', maxWidth: 1000, fontSize: 'clamp(38px,6.4vw,72px)', fontWeight: 400, letterSpacing: '-.035em', lineHeight: 1.0, textWrap: 'balance' } as React.CSSProperties}>
         <Reveal delay={60} as="span" className="block">Sabes cuánto vendiste.</Reveal>
-        <Reveal delay={170} as="span" className="block text-dim">Puente te dice cuánto</Reveal>
+        <Reveal delay={170} as="span" className="block text-dim">Beel te dice cuánto</Reveal>
         <Reveal delay={260} as="span" className="block">vas a tener el día 15.</Reveal>
       </h1>
 
       <Reveal delay={360}>
         <p style={{ margin: '28px auto 0', maxWidth: 620, fontSize: 'clamp(14.5px,1.4vw,16.5px)', lineHeight: 1.6, color: '#C7D6D5', textWrap: 'pretty' } as React.CSSProperties}>
-          Sube el ZIP de CFDI de tu portal SAT y elige tu cuenta operativa. Puente reconcilia facturas contra movimientos, aprende cuándo paga cada cliente y proyecta tu liquidez a 30 días — con la banda pesimista puesta.
+          Sube el ZIP de CFDI de tu portal SAT y elige tu cuenta operativa. Beel reconcilia facturas contra movimientos, aprende cuándo paga cada cliente y proyecta tu liquidez a 30 días — con la banda pesimista puesta.
         </p>
       </Reveal>
 
@@ -256,9 +260,8 @@ function Hero() {
           <TiltCard style={{ borderRadius: 34, border: '1px solid rgba(199,214,213,0.13)', boxShadow: '0 50px 120px rgba(0,0,0,0.7)', background: 'radial-gradient(120% 90% at 80% 0%, rgba(109,114,117,0.26) 0%, rgba(109,114,117,0.10) 42%, rgba(12,18,12,0) 72%), #0C120C', padding: 'clamp(14px,2vw,22px)', textAlign: 'left', position: 'relative' }}>
             {/* mini nav */}
             <div className="flex items-center justify-between gap-[14px]">
-              <div className="flex items-center gap-[9px]">
-                <span className="size-[14px] rounded-[5px] bg-ember" />
-                <span className="text-[14px] font-medium tracking-[-.01em]">Puente</span>
+              <div className="flex items-center">
+                <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-5 w-auto" />
               </div>
               <div className="hidden items-center gap-0.5 overflow-hidden sm:flex"
                 style={{ height: 36, padding: '0 5px', borderRadius: 999, background: 'rgba(109,114,117,0.14)', border: '1px solid rgba(199,214,213,0.10)' }}>
@@ -383,7 +386,7 @@ function ElProblema() {
             <div className="font-mono text-[10.5px] uppercase tracking-[.12em] text-dim">Los cuatro días que deciden el mes</div>
             <div className="mt-5 flex flex-col">
               {[
-                { day: 'DÍA 11', title: 'Puente detecta el breach', desc: 'Faltan $25,300 MXN para la nómina del 15.', dayColor: '#6D7275' },
+                { day: 'DÍA 11', title: 'Beel detecta el breach', desc: 'Faltan $25,300 MXN para la nómina del 15.', dayColor: '#6D7275' },
                 { day: 'DÍA 11', title: 'Recovery ladder, no crédito', desc: 'Cobrar A-4471 de Ferretería López 4 días antes cierra el hueco.', dayColor: '#6D7275' },
                 { day: 'DÍA 13', title: 'López deposita', desc: 'Históricamente liquida en 4 días de la solicitud.', dayColor: '#6D7275' },
                 { day: 'DÍA 15', title: 'Nómina pagada, cero deuda', desc: 'Sin tarjeta corporativa, sin comisión por sobregiro.', dayColor: '#C20114' },
@@ -451,8 +454,8 @@ function ComoFunciona() {
 const FEATURES = [
   { num: '01', badge: 'Predicción', badgeStyle: { background: '#C20114' }, title: 'Forecast a 30 días con la banda pesimista puesta', body: 'La línea esperada descuenta el riesgo de cada cliente. Debajo, el escenario P20: lo que pasa si los cobros se atrasan como se atrasan en la vida real. El punto mínimo viene con fecha y monto.', tags: ['Línea esperada', 'Banda P20', 'Punto mínimo'], imgRight: true, dark: false, screenshotLabel: '/prediccion', screenshotSub: 'gráfica de forecast + callout del mínimo' },
   { num: '02', badge: 'Breach alert', badgeStyle: { border: '1px solid rgba(199,214,213,0.18)', color: '#C7D6D5' }, title: 'El aviso llega el 11, no el 15', body: 'Una notificación con el día, el monto y la causa: «el 15 te faltan $25,300 para la nómina». Cuatro días de margen son la diferencia entre negociar un cobro y firmar una tarjeta al 45%.', tags: [], imgRight: false, dark: false, screenshotLabel: 'alerta de breach', screenshotSub: 'push del día 11 + desglose de la quincena' },
-  { num: '03', badge: 'Recovery ladder', badgeStyle: { border: '1px solid rgba(199,214,213,0.18)', color: '#C7D6D5' }, title: 'Primero cobrar. El crédito es el último escalón', body: 'Puente ordena las acciones por costo real: adelantar el cobro que sí se puede adelantar, diferir un pago sin penalización y, sólo si nada alcanza, líneas pre-calificadas ordenadas por costo efectivo — no por comisión.', tags: [], imgRight: true, dark: false, screenshotLabel: '/recovery', screenshotSub: 'escalera de acciones con costo por escalón', ladder: true },
-  { num: '04', badge: 'Structural refusal', badgeStyle: { border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.12)', color: '#EF4444' }, title: 'A veces la respuesta correcta es «no te endeudes»', body: 'Si el hueco es estructural y no de calendario, Puente oculta las ofertas de crédito y muestra la simulación: en qué mes los intereses te llevan a la insolvencia. Cobramos suscripción precisamente para poder decirte esto.', tags: [], imgRight: false, dark: true, screenshotLabel: 'structural refusal', screenshotSub: 'simulación contrafactual de insolvencia' },
+  { num: '03', badge: 'Recovery ladder', badgeStyle: { border: '1px solid rgba(199,214,213,0.18)', color: '#C7D6D5' }, title: 'Primero cobrar. El crédito es el último escalón', body: 'Beel ordena las acciones por costo real: adelantar el cobro que sí se puede adelantar, diferir un pago sin penalización y, sólo si nada alcanza, líneas pre-calificadas ordenadas por costo efectivo — no por comisión.', tags: [], imgRight: true, dark: false, screenshotLabel: '/recovery', screenshotSub: 'escalera de acciones con costo por escalón', ladder: true },
+  { num: '04', badge: 'Structural refusal', badgeStyle: { border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.12)', color: '#EF4444' }, title: 'A veces la respuesta correcta es «no te endeudes»', body: 'Si el hueco es estructural y no de calendario, Beel oculta las ofertas de crédito y muestra la simulación: en qué mes los intereses te llevan a la insolvencia. Cobramos suscripción precisamente para poder decirte esto.', tags: [], imgRight: false, dark: true, screenshotLabel: 'structural refusal', screenshotSub: 'simulación contrafactual de insolvencia' },
 ] as const;
 
 function Producto() {
@@ -597,7 +600,7 @@ function Comparacion() {
           <div style={{ minWidth: 680 }}>
             <div className="grid items-center px-6 py-[18px] font-mono text-[10px] uppercase tracking-[.12em] text-dim"
               style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr', borderBottom: '1px solid rgba(199,214,213,0.10)' }}>
-              <div /><div className="text-ghost">Puente</div><div>Contador externo</div><div>Tarjeta corporativa</div>
+              <div /><div className="text-ghost">Beel</div><div>Contador externo</div><div>Tarjeta corporativa</div>
             </div>
             {COMPARE_ROWS.map((row, i) => (
               <div key={row.label} className="grid items-center px-6 py-[18px] text-[13.5px]"
@@ -750,7 +753,7 @@ function Precio() {
 
 const FAQS = [
   { q: '¿Necesito dar mis credenciales del banco?', a: 'No. No pedimos contraseñas ni API keys. Eliges tu cuenta operativa por número de cuenta y subes el XML que el SAT ya te entrega. Sin OAuth de adorno ni permisos permanentes.' },
-  { q: '¿En qué se diferencia de mi contador?', a: 'Tu contador mira hacia atrás y cierra el mes. Puente mira 30 días hacia adelante y se actualiza todos los días. Son complementarios: de hecho, el canal por el que llegamos a la mayoría de nuestros clientes son contadores externos.' },
+  { q: '¿En qué se diferencia de mi contador?', a: 'Tu contador mira hacia atrás y cierra el mes. Beel mira 30 días hacia adelante y se actualiza todos los días. Son complementarios: de hecho, el canal por el que llegamos a la mayoría de nuestros clientes son contadores externos.' },
   { q: '¿Qué tan confiable es la predicción?', a: 'No prometemos un número único. Cada cliente tiene sus learned payment terms aprendidos de tu propio historial de cobros, y siempre verás la banda P20 junto a la línea esperada. Si el escenario pesimista rompe la nómina, eso es lo que te decimos.' },
   { q: '¿Ganan comisión si acepto un crédito?', a: 'Sí, entre 1% y 3% del monto fondeado, y sólo si el crédito se desembolsa. Por eso cobramos suscripción: el ingreso recurrente es mayor que la comisión, así que el incentivo está en que te quedes, no en que te endeudes.' },
   { q: '¿Funciona si vendo mucho de contado?', a: 'Sí. Los depósitos sin factura asociada se tratan como venta de contado y entran al modelo con su propio patrón. Es la norma en retail y no rompe la proyección.' },
@@ -842,9 +845,8 @@ function Footer() {
     <footer style={{ padding: 'clamp(48px,7vw,92px) 0 40px' }}>
       <div className="grid gap-[clamp(24px,3vw,40px)] pb-9" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,170px),1fr))', borderBottom: '1px solid rgba(199,214,213,0.10)' }}>
         <div className="min-w-0">
-          <div className="flex items-center gap-[10px]">
-            <span className="size-[18px] rounded-[6px] bg-ember" />
-            <span className="text-[18px] font-medium tracking-[-.01em]">Puente</span>
+          <div className="flex items-center">
+            <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-7 w-auto" />
           </div>
           <p className="mt-4 text-[13.5px] leading-[1.6] text-dim" style={{ maxWidth: 260 }}>
             Inteligencia de capital de trabajo para PyMEs mexicanas. Monterrey, Nuevo León.
@@ -860,7 +862,7 @@ function Footer() {
         ))}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-[14px] pt-6 font-mono text-[10px] uppercase tracking-[.12em] text-dim">
-        <span>© 2026 Puente · Monterrey, MX</span>
+        <span>© 2026 Beel · Monterrey, MX</span>
         <span>Montos en MXN · CFDI 4.0 · Datos de demostración</span>
       </div>
     </footer>
