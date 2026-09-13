@@ -13,6 +13,7 @@ import Recovery from '@/pages/Recovery';
 import Funding from '@/pages/Funding';
 import CfdiConfig from '@/pages/CfdiConfig';
 import Ajustes from '@/pages/Ajustes';
+import Landing from '@/pages/Landing';
 
 /** Rehydrate the store from the session cookie on load.
  *
@@ -36,10 +37,10 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Inicio />} />
           <Route path="/business" element={<MiNegocio />} />
           <Route path="/forecast" element={<Prediccion />} />
@@ -50,7 +51,7 @@ export default function App() {
           <Route path="/settings" element={<Ajustes />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
