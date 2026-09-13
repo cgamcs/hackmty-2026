@@ -58,6 +58,8 @@ export interface SetupStatus {
   rfc: string | null;
   account_id: string | null;
   account_last4: string | null;
+  /** Cash outside the operating account the owner can move in; 0 when not declared. */
+  cash_buffer: number;
   counts: { cfdi: number; obligations: number; flows: number; open_receivables: number };
 }
 
@@ -94,6 +96,10 @@ export const fetchSetupStatus = () => api<SetupStatus>('/api/setup/status');
 
 export const saveProfile = (razonSocial: string) =>
   post<{ razon_social: string }>('/api/profile', { razon_social: razonSocial });
+
+/** Savings or another account the owner can move into the operating account. */
+export const saveCashBuffer = (amount: number) =>
+  post<{ cash_buffer: number }>('/api/buffer', { cash_buffer: amount });
 
 export const connectAccount = (accountNumber: string) =>
   post<{ account_id: string; nickname: string; balance: number; last4: string }>('/api/connect', {

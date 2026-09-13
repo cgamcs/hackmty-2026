@@ -63,7 +63,8 @@ export function buildScenario(): DashboardData {
   const income30 = { total: 684210, changePct: 8.4, cash: 401500, cfdi: 282800 };
   const breach = detectBreach(forecast, payables, TODAY);
   const gap = classifyGap(forecast, breach);
-  const { risk, residualPct } = riskLevel(gap, breach?.shortfall ?? 0, income30.total);
+  const healthScore = 61;
+  const { risk, residualPct } = riskLevel(gap, breach, income30.total, healthScore);
   const bufferAvailable = 74200;
 
   return {
@@ -71,7 +72,7 @@ export function buildScenario(): DashboardData {
     business: { name: 'Ferretería Monterrey Norte', rfc: 'FMN150922J41', owner: 'Mariana Villarreal', ownerInitials: 'MV' },
     account,
     accounts: [account],
-    healthScore: 61,
+    healthScore,
     resilienceScore: 48,
     collection: { collectedPct: 58, receivablePct: 28, overduePct: 14 },
     income30,

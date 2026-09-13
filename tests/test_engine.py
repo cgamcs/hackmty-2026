@@ -9,9 +9,12 @@ from financial_engine import (
     GapType,
     Obligation,
     Receivable,
+    RiskLevel,
     StressScenario,
+    risk_level,
     snapshot_from_dict,
 )
+from financial_engine.models import Breach
 
 
 TODAY = date(2026, 9, 12)
@@ -203,6 +206,44 @@ class FinancialEngineTests(unittest.TestCase):
         )
         self.assertEqual(snapshot.as_of, TODAY)
         self.assertEqual(snapshot.obligations[0].amount, 100)
+
+
+class RiskLevelTests(unittest.TestCase):
+    """One grade for any single future: Predicción and both Stress Lab curves share it."""
+
+    @staticmethod
+    def _breach(days: int, shortfall: float) -> Breach:
+        return Breach(TODAY + timedelta(days=days), shortfall, "ob", "Nómina", shortfall)
+
+    def test_structural_is_critical_whatever_the_health(self) -> None:
+        grade = risk_level(GapType.STRUCTURAL, self._breach(20, 1_000), TODAY, 300_000, 95)
+        self.assertEqual(grade, RiskLevel.CRITICO)
+
+    def test_no_breach_is_graded_by_health(self) -> None:
+        self.assertEqual(risk_level(GapType.NONE, None, TODAY, 300_000, 70), RiskLevel.BAJO)
+        self.assertEqual(risk_level(GapType.NONE, None, TODAY, 300_000, 69), RiskLevel.MEDIO)
+
+    def test_imminent_breach_is_high_even_when_small(self) -> None:
+        # 10% of the month's inflow, 5 days away: the case the two old rules disagreed on.
+        grade = risk_level(GapType.TIMING, self._breach(5, 30_000), TODAY, 300_000, 80)
+        self.assertEqual(grade, RiskLevel.ALTO)
+
+    def test_distant_small_breach_is_medium(self) -> None:
+        grade = risk_level(GapType.TIMING, self._breach(20, 30_000), TODAY, 300_000, 80)
+        self.assertEqual(grade, RiskLevel.MEDIO)
+
+    def test_distant_large_breach_is_high(self) -> None:
+        grade = risk_level(GapType.TIMING, self._breach(20, 90_000), TODAY, 300_000, 80)
+        self.assertEqual(grade, RiskLevel.ALTO)
+
+    def test_breach_without_income_is_high(self) -> None:
+        # Dividing by zero inflow must not silently grade a shortfall as mild.
+        grade = risk_level(GapType.TIMING, self._breach(20, 1_000), TODAY, 0, 80)
+        self.assertEqual(grade, RiskLevel.ALTO)
+
+    def test_analysis_carries_the_grade(self) -> None:
+        result = FinancialEngine().analyze(BusinessSnapshot(as_of=TODAY, current_balance=1_000))
+        self.assertEqual(result.to_dict()["risk_level"], result.risk_level.value)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,15 @@ class FinancingStatus(str, Enum):
     NOT_RECOMMENDED_STRUCTURAL = "not_recommended_structural"
 
 
+class RiskLevel(str, Enum):
+    """The badge for one projected future. Values are the labels the UI renders."""
+
+    BAJO = "BAJO"
+    MEDIO = "MEDIO"
+    ALTO = "ALTO"
+    CRITICO = "CRITICO"
+
+
 @dataclass(frozen=True)
 class CashFlow:
     """A settled historical movement. Income is positive, expense is negative."""
@@ -126,6 +135,7 @@ class ForecastResult:
     recommendations: list[Recommendation]
     financing_decision: FinancingDecision
     diagnostics: dict[str, Any]
+    risk_level: RiskLevel
 
     def to_dict(self) -> dict[str, Any]:
         def convert(value: Any) -> Any:

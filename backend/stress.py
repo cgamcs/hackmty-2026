@@ -1,8 +1,8 @@
 """Stress-scenario logic for the Stress Lab.
 
-Separate from `main.py` so it carries no FastAPI dependency: the scenario arithmetic and
-the risk grading are the parts worth testing, and they should run without a web framework,
-a database, or an API key installed.
+Separate from `main.py` so it carries no FastAPI dependency: the scenario arithmetic is the
+part worth testing, and it should run without a web framework, a database, or an API key
+installed. The risk grade comes from the engine, the same one Predicción shows.
 
 Shapes fixed by `StressRequest` / `StressSimulationResponse` in `frontend/src/types.ts`.
 """
@@ -16,8 +16,6 @@ from pydantic import BaseModel, Field
 from financial_engine import FinancialEngine, StressScenario
 
 HORIZON_DAYS = 30
-# Below this share of monthly inflow a timing gap is uncomfortable rather than dangerous.
-MEDIO_THRESHOLD = 0.20
 
 
 class StressRequest(BaseModel):
@@ -27,27 +25,10 @@ class StressRequest(BaseModel):
     available_cash_buffer: float | None = Field(default=None, ge=0)
 
 
-def risk_level(result: dict) -> str:
-    """Grade one engine analysis for the UI badge."""
-    gap = result.get("gap_type")
-    if gap == "none":
-        return "BAJO"
-    if gap == "structural":
-        # Never softened by a healthy-looking curve. A reassuring badge on a business
-        # whose outflows persistently exceed inflows is the worst thing to display.
-        return "CRITICO"
-    shortfall = float((result.get("breach") or {}).get("shortfall", 0))
-    monthly_inflow = sum(float(p["expected_inflow"]) for p in result.get("points", []))
-    # Relative to what the business actually takes in: the same peso shortfall means very
-    # different things at different revenues. No inflow at all is never the mild case.
-    return ("MEDIO" if monthly_inflow and shortfall / monthly_inflow < MEDIO_THRESHOLD
-            else "ALTO")
-
-
 def analysis(result) -> dict:
-    payload = result.to_dict()
-    payload["risk_level"] = risk_level(payload)
-    return payload
+    # The engine already grades the future (risk_level), so the baseline curve here reads
+    # exactly like Predicción and a stressed curve is comparable to it.
+    return result.to_dict()
 
 
 def run_stress(request: StressRequest, snapshot, account: dict, business: dict) -> dict:

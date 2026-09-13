@@ -6,6 +6,7 @@ import {
   useConnectAccount,
   useObligations,
   useRunSync,
+  useSaveCashBuffer,
   useSaveObligation,
   useSaveProfile,
   useSetupStatus,
@@ -86,15 +87,21 @@ export default function Ajustes() {
   const upload = useUploadCfdi();
   const sync = useRunSync();
   const saveOb = useSaveObligation();
+  const cashBuffer = useSaveCashBuffer();
 
   const [razonSocial, setRazonSocial] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [buffer, setBuffer] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Prefill from the server once it answers, without clobbering an in-progress edit.
   useEffect(() => {
     if (setup?.razon_social && !razonSocial) setRazonSocial(setup.razon_social);
   }, [setup?.razon_social]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (setup?.cash_buffer && !buffer) setBuffer(String(setup.cash_buffer));
+  }, [setup?.cash_buffer]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isDemo) {
     return (
@@ -381,6 +388,53 @@ export default function Ajustes() {
             {saveOb.isError && (
               <div role="alert" className="text-[13px] text-alto">
                 {(saveOb.error as Error).message}
+              </div>
+            )}
+          </section>
+
+          {/* optional — colchón de efectivo */}
+          <section className="card col-span-full flex flex-col gap-4 p-6 sm:p-7">
+            <header>
+              <div className="eyebrow">Opcional</div>
+              <h2 className="m-0 mt-1 text-[19px] font-medium tracking-[-.02em]">
+                Colchón de efectivo
+              </h2>
+              <p className="m-0 mt-1 max-w-[680px] text-[13px] leading-relaxed text-dim">
+                Dinero que puedes pasar a tu cuenta operativa si hace falta: ahorros u otra
+                cuenta. No incluyas el saldo de tu cuenta operativa, ya lo contamos. La escalera
+                lo usa antes de sugerir un crédito.
+              </p>
+            </header>
+            <div className="flex flex-col gap-3 sm:max-w-[520px] sm:flex-row">
+              <label htmlFor="cash-buffer" className="sr-only">
+                Colchón de efectivo en pesos
+              </label>
+              <input
+                id="cash-buffer"
+                value={buffer}
+                onChange={(e) => setBuffer(e.target.value.replace(/[^\d.]/g, ''))}
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="0"
+                className={`${inputCls} tabular-nums`}
+              />
+              <button
+                type="button"
+                disabled={buffer === '' || Number.isNaN(Number(buffer)) || cashBuffer.isPending}
+                onClick={() => cashBuffer.mutate(Number(buffer))}
+                className="h-[46px] flex-none rounded-xl bg-ember px-5 text-[13.5px] font-medium disabled:opacity-50"
+              >
+                {cashBuffer.isPending ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+            {cashBuffer.isSuccess && (
+              <div role="status" className="text-[13px] text-ash">
+                Colchón guardado: {mxn(cashBuffer.data.cash_buffer)}
+              </div>
+            )}
+            {cashBuffer.isError && (
+              <div role="alert" className="text-[13px] text-alto">
+                {(cashBuffer.error as Error).message}
               </div>
             )}
           </section>

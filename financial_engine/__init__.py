@@ -1,6 +1,6 @@
 """Explainable 30-day working-capital engine for NEXUS."""
 
-from .engine import FinancialEngine
+from .engine import FinancialEngine, risk_level
 from .contracts import scenario_from_dict, snapshot_from_dict
 from .adapters import (
     find_company_account,
@@ -17,6 +17,7 @@ from .models import (
     GapType,
     Obligation,
     Receivable,
+    RiskLevel,
     StressScenario,
 )
 
@@ -30,7 +31,9 @@ __all__ = [
     "GapType",
     "Obligation",
     "Receivable",
+    "RiskLevel",
     "StressScenario",
+    "risk_level",
     "scenario_from_dict",
     "snapshot_from_dict",
     "snapshot_from_mock_files",

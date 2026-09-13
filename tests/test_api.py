@@ -17,12 +17,14 @@ from __future__ import annotations
 import base64
 import os
 import unittest
+from dataclasses import replace
 from datetime import date, timedelta
 from unittest.mock import patch
 
 from backend.crypto import decrypt_xml, encrypt_xml
-from backend.stress import StressRequest, risk_level, run_stress
-from financial_engine import BusinessSnapshot, CashFlow
+from backend.dashboard import build as build_dashboard
+from backend.stress import StressRequest, run_stress
+from financial_engine import BusinessSnapshot, CashFlow, FinancialEngine, Obligation
 
 
 class CryptoKeyTests(unittest.TestCase):
@@ -87,29 +89,30 @@ class StressTests(unittest.TestCase):
         self.assertEqual(payload["available_cash_buffer"], 12_345)
 
 
-class RiskLevelTests(unittest.TestCase):
-    def test_structural_is_always_critical(self) -> None:
-        # Never softened by a healthy-looking curve: a reassuring badge on a business
-        # whose outflows persistently exceed inflows is the worst thing to display.
-        self.assertEqual(risk_level({"gap_type": "structural", "points": []}), "CRITICO")
+class RiskConsistencyTests(unittest.TestCase):
+    def test_stress_baseline_is_graded_like_the_forecast(self) -> None:
+        # A small shortfall (about 4% of monthly inflow) two days away: the old Stress Lab
+        # rule said MEDIO while the dashboard said ALTO for the very same future.
+        snapshot = replace(_snapshot(balance=2_000), obligations=[
+            Obligation("payroll", TODAY + timedelta(days=2), 12_000, "Nómina", hard_deadline=True)])
+        payload = run_stress(StressRequest(), snapshot, {"nickname": "x"},
+                             {"slug": "t", "name": "", "rfc": "", "owner": ""})
+        forecast = FinancialEngine().analyze(snapshot).to_dict()
+        self.assertEqual(payload["baseline"]["risk_level"], forecast["risk_level"])
+        self.assertEqual(payload["baseline"]["risk_level"], "ALTO")
 
-    def test_no_gap_is_low(self) -> None:
-        self.assertEqual(risk_level({"gap_type": "none", "points": []}), "BAJO")
 
-    def test_gap_is_graded_against_revenue(self) -> None:
-        points = [{"expected_inflow": 10_000} for _ in range(30)]   # 300,000 total
-        small = {"gap_type": "timing", "points": points,
-                 "breach": {"shortfall": 30_000}}      # 10%
-        large = {"gap_type": "timing", "points": points,
-                 "breach": {"shortfall": 90_000}}      # 30%
-        self.assertEqual(risk_level(small), "MEDIO")
-        self.assertEqual(risk_level(large), "ALTO")
-
-    def test_no_revenue_is_not_treated_as_low_risk(self) -> None:
-        # Dividing by zero inflow must not silently grade a shortfall as MEDIO.
-        self.assertEqual(
-            risk_level({"gap_type": "timing", "points": [],
-                        "breach": {"shortfall": 1_000}}), "ALTO")
+class DashboardBufferTests(unittest.TestCase):
+    def test_buffer_shown_is_the_stored_cash_buffer(self) -> None:
+        # bufferAvailable used to be the minimum pessimistic balance, which Recovery then
+        # spent as if it were reserve cash.
+        data = build_dashboard(
+            tenant={}, account={}, accounts=[], flows=[], invoices=[], obligations=[],
+            result={"points": [], "risk_level": "BAJO",
+                    "diagnostics": {"minimum_pessimistic_balance": -9_000}},
+            today=TODAY, cash_buffer=15_000)
+        self.assertEqual(data["bufferAvailable"], 15_000)
+        self.assertEqual(data["risk"], "BAJO")
 
 
 if __name__ == "__main__":

@@ -221,7 +221,7 @@ def setup_status(tenant_id: str = Depends(require_tenant)):
     with tenant_tx(tenant_id) as conn:
         row = fetch_one(conn, """
             select
-              t.razon_social, t.rfc, t.account_id, t.account_number_last4,
+              t.razon_social, t.rfc, t.account_id, t.account_number_last4, t.cash_buffer,
               (select count(*) from invoices  i where i.tenant_id = t.id) as cfdi_count,
               (select count(*) from obligations o where o.tenant_id = t.id) as obligation_count,
               (select count(*) from cash_flows f where f.tenant_id = t.id) as flow_count,
@@ -247,6 +247,7 @@ def setup_status(tenant_id: str = Depends(require_tenant)):
         # server resolved — it never sees the account list to pick from.
         "account_id": row["account_id"],
         "account_last4": row["account_number_last4"],
+        "cash_buffer": float(row["cash_buffer"] or 0),
         "counts": {"cfdi": row["cfdi_count"], "obligations": row["obligation_count"],
                    "flows": row["flow_count"], "open_receivables": row["open_receivables"]},
     }
@@ -261,6 +262,27 @@ def update_profile(payload: dict, tenant_id: str = Depends(require_tenant)):
         execute(conn, "update tenants set razon_social = %s where id = %s",
                 (razon_social, tenant_id))
     return {"razon_social": razon_social}
+
+
+@app.post("/api/buffer")
+def update_cash_buffer(payload: dict, tenant_id: str = Depends(require_tenant)):
+    """Cash the owner can move into the operating account: savings or another account.
+
+    Money already in the operating account does not belong here. The live Nessie balance is
+    the projection's opening balance, so entering it again would count it twice.
+    """
+    try:
+        amount = float(payload.get("cash_buffer"))
+    except (TypeError, ValueError):
+        raise HTTPException(400, "Indica el colchón como un monto en pesos.") from None
+    # The comparison also rejects NaN and infinity, which float() accepts.
+    if not 0 <= amount < 1e12:
+        raise HTTPException(400, "El colchón debe ser un monto de 0 o más.")
+    amount = round(amount, 2)
+    with tenant_tx(tenant_id) as conn:
+        execute(conn, "update tenants set cash_buffer = %s where id = %s",
+                (amount, tenant_id))
+    return {"cash_buffer": amount}
 
 
 @app.post("/api/cfdi/upload")
@@ -508,7 +530,8 @@ def sme_dashboard(account_id: str,
     return dashboard.build(
         tenant=tenant, account=account_view, accounts=[account_view],
         flows=flows, invoices=invoices, obligations=obligation_rows,
-        result=result, today=today)
+        result=result, today=today,
+        cash_buffer=payload["available_cash_buffer"])
 
 
 @app.post("/api/stress")

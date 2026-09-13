@@ -42,12 +42,19 @@ export function classifyGap(forecast: ForecastPoint[], breach: Breach | null): G
   return net >= 0 && recovers ? 'TIMING' : 'STRUCTURAL';
 }
 
-/** frontend.md risk table. */
-export function riskLevel(gap: GapKind, shortfall: number, monthlyInflow: number): { risk: RiskLevel; residualPct: number } {
-  const residualPct = monthlyInflow > 0 ? shortfall / monthlyInflow : 1;
-  if (gap === 'NONE') return { risk: 'BAJO', residualPct: 0 };
+/** Same grade as financial_engine.risk_level, so demo mode reads like the real product:
+ *  structural is CRITICO; a breach within 7 days or worth 20%+ of monthly inflow is ALTO;
+ *  any other breach is MEDIO; with no breach, health below 70 is MEDIO. */
+export function riskLevel(
+  gap: GapKind,
+  breach: Breach | null,
+  monthlyInflow: number,
+  healthScore: number,
+): { risk: RiskLevel; residualPct: number } {
+  const residualPct = breach ? (monthlyInflow > 0 ? breach.shortfall / monthlyInflow : 1) : 0;
   if (gap === 'STRUCTURAL') return { risk: 'CRITICO', residualPct };
-  return { risk: residualPct < 0.2 ? 'MEDIO' : 'ALTO', residualPct };
+  if (!breach) return { risk: healthScore >= 70 ? 'BAJO' : 'MEDIO', residualPct };
+  return { risk: breach.daysUntil <= 7 || residualPct >= 0.2 ? 'ALTO' : 'MEDIO', residualPct };
 }
 
 /** Phase 7 — cheapest first, credit last. Each rung is applied only while a gap remains. */

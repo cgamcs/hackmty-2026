@@ -79,7 +79,7 @@ def build(conn, tenant_id: str, as_of: date | None = None,
     as_of = as_of or date.today()
     horizon_end = as_of + timedelta(days=horizon_days)
 
-    tenant = fetch_one(conn, "select account_id from tenants where id = %s",
+    tenant = fetch_one(conn, "select account_id, cash_buffer from tenants where id = %s",
                        (tenant_id,))
     if not tenant or not tenant["account_id"]:
         raise ValueError("tenant has no connected account — run /connect first")
@@ -182,7 +182,8 @@ def build(conn, tenant_id: str, as_of: date | None = None,
     return {
         "as_of": as_of.isoformat(),
         "current_balance": current_balance,
-        "available_cash_buffer": 0.0,
+        # Money outside the operating account the owner declared in Ajustes (migration 012).
+        "available_cash_buffer": float(tenant["cash_buffer"] or 0),
         "safety_buffer": safety_buffer,
         "historical_flows": [
             {

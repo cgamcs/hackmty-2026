@@ -43,20 +43,6 @@ KIND_MAP = {
 AGING_BUCKETS = (("Por vencer", 0), ("1–30 días", 1), ("31–60 días", 31), ("60+ días", 61))
 
 
-def risk_level(gap: str, breach: dict | None, health: int) -> str:
-    """Four levels for the UI badge.
-
-    Structural is always CRITICO regardless of score: a recoverable-looking health number
-    on a business whose outflows persistently exceed inflows is the most dangerous thing
-    this product could display.
-    """
-    if gap == "STRUCTURAL":
-        return "CRITICO"
-    if breach:
-        return "ALTO" if (breach.get("daysUntil") or 0) <= 7 else "MEDIO"
-    return "BAJO" if health >= 70 else "MEDIO"
-
-
 def _pct_change(current: float, previous: float) -> float:
     if previous <= 0:
         return 0.0
@@ -161,6 +147,7 @@ def build(
     obligations: list[dict],
     result: dict,
     today: date | None = None,
+    cash_buffer: float = 0.0,
 ) -> dict[str, Any]:
     today = today or date.today()
     window_start = today - timedelta(days=30)
@@ -340,11 +327,13 @@ def build(
              "pessimistic": round(float(p["pessimistic_balance"]), 2)}
             for p in result.get("points", [])
         ],
-        "bufferAvailable": round(float(
-            (result.get("diagnostics") or {}).get("minimum_pessimistic_balance", 0)), 2),
+        # Reserve cash the owner declared in Ajustes. It used to be the minimum pessimistic
+        # balance, which Recovery then spent as if it were money in hand.
+        "bufferAvailable": round(float(cash_buffer), 2),
         "breach": breach,
         "gap": gap,
-        "risk": risk_level(gap, breach, health),
+        # Graded by the engine, so this badge matches the Stress Lab baseline exactly.
+        "risk": result["risk_level"],
         "residualPct": round(ladder["residual"] / shortfall * 100, 1) if shortfall else 0.0,
         "ladder": ladder,
     }
@@ -353,14 +342,6 @@ def build(
 def demo() -> None:
     """Self-check on the pure mapping, no database or engine run required."""
     today = date(2026, 9, 12)
-
-    # Structural outranks a healthy-looking score: the most dangerous thing this product
-    # could show is a reassuring badge on a business that is sinking.
-    assert risk_level("STRUCTURAL", None, 95) == "CRITICO"
-    assert risk_level("TIMING", {"daysUntil": 3}, 80) == "ALTO"
-    assert risk_level("TIMING", {"daysUntil": 20}, 80) == "MEDIO"
-    assert risk_level("NONE", None, 80) == "BAJO"
-    assert risk_level("NONE", None, 40) == "MEDIO"
 
     # Quiet days still produce rows, so the chart cannot compress a dry week away.
     flows = [{"date": today, "amount": 100.0}, {"date": today, "amount": -40.0}]

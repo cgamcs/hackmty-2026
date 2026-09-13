@@ -3,8 +3,8 @@
     python3 backend/check_tenants.py
 
 Each step replays a path that broke once the schema met a second tenant: registration
-privileges (009/010), session-to-tenant lookup under RLS (007), the audit trigger (008), and
-the same CFDI UUID in two tenants (010). It all runs in ONE transaction that is always rolled
+privileges (009/010), session-to-tenant lookup under RLS (007), the audit trigger (008),
+the same CFDI UUID in two tenants (010), and the per-tenant cash buffer (012). It all runs in ONE transaction that is always rolled
 back, so it leaves nothing behind and is safe against the live database.
 """
 
@@ -91,6 +91,18 @@ def run(conn) -> None:
     assert fetch_one(conn, "select count(*) n from invoices where tenant_id = %s",
                      (a[0],))["n"] == 0, "RLS: a tenant can see another tenant's invoices"
 
+    # 012: each tenant stores its own cash buffer, and a negative one is refused.
+    execute(conn, "update tenants set cash_buffer = %s where id = %s", (25_000, b[0]))
+    stored = fetch_one(conn, "select cash_buffer from tenants where id = %s", (b[0],))
+    assert stored and float(stored["cash_buffer"]) == 25_000, "012: the cash buffer was not stored"
+    try:
+        with conn.transaction():                                         # savepoint
+            execute(conn, "update tenants set cash_buffer = -1 where id = %s", (b[0],))
+    except psycopg.errors.CheckViolation:
+        pass
+    else:
+        raise AssertionError("012: a negative cash buffer was accepted")
+
     execute(conn, "delete from sessions where token = %s", (a[1],))         # logout
 
 
@@ -100,7 +112,8 @@ def main() -> None:
             run(conn)
         finally:
             conn.rollback()
-    print("ok: registration, sessions, shared CFDI upsert, audit trigger, RLS isolation")
+    print("ok: registration, sessions, shared CFDI upsert, audit trigger, RLS isolation, "
+          "cash buffer")
 
 
 if __name__ == "__main__":

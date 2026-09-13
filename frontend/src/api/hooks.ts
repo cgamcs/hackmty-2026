@@ -6,6 +6,7 @@ import {
   fetchSetupStatus,
   isDemo,
   runSync,
+  saveCashBuffer,
   saveObligation,
   saveProfile,
   simulateStress,
@@ -69,6 +70,7 @@ function useIntegrationMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TRe
 }
 
 export const useSaveProfile = () => useIntegrationMutation(saveProfile);
+export const useSaveCashBuffer = () => useIntegrationMutation(saveCashBuffer);
 export const useConnectAccount = () => useIntegrationMutation(connectAccount);
 export const useUploadCfdi = () => useIntegrationMutation(uploadCfdi);
 export const useRunSync = () => useIntegrationMutation(runSync);

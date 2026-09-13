@@ -61,7 +61,7 @@ Row-Level Security (RLS).
 
 text
 backend/             FastAPI, authentication, TigerData access and API orchestration
-db/tiger/            Ordered TigerData migrations (001 through 011)
+db/tiger/            Ordered TigerData migrations (001 through 012)
 engine/              Nessie client, CFDI parsing, reconciliation and learned terms
 financial_engine/    Forecast, scores, stress scenarios and recovery decisions
 frontend/            React application
@@ -114,9 +114,9 @@ must continue using the restricted DATABASE_URL.
 
 ## Database setup
 
-Run every SQL file in db/tiger/ in numeric order, from 001_schema.sql through
-011_daily_flows_access.sql, using the Tiger Cloud SQL editor or an administrative
-tsdbadmin connection.
+Run every SQL file in `db/tiger/` in numeric order, from `001_schema.sql` through
+`012_cash_buffer.sql`, using the Tiger Cloud SQL editor or an administrative
+`tsdbadmin` connection.
 
 Migration 003 creates app_api with a placeholder password when the role does not yet
 exist. Set a real password from the administrative connection, then use that same password
@@ -132,6 +132,7 @@ Important migration notes:
 - 010 restates the complete multi-tenant privileges and supersedes 009.
 - 011 exposes only tenant-filtered daily flows while keeping the raw continuous
   aggregate private.
+- `012` stores each company's cash buffer, which the recovery ladder draws on before credit.
 
 After applying the migrations, validate the live schema through the restricted application
 role. The check creates two temporary tenants in one transaction and always rolls it back:

@@ -19,8 +19,39 @@ from .models import (
     Obligation,
     Receivable,
     Recommendation,
+    RiskLevel,
     StressScenario,
 )
+
+# A breach this close leaves no time to act, whatever its size.
+URGENT_BREACH_DAYS = 7
+# A shortfall at or above this share of the horizon's expected inflow is severe.
+SEVERE_SHORTFALL_SHARE = 0.20
+HEALTHY_SCORE = 70
+
+
+def risk_level(
+    gap_type: GapType,
+    breach: Breach | None,
+    as_of: date,
+    expected_inflow: float,
+    health_score: int,
+) -> RiskLevel:
+    """Grade one projected future.
+
+    Every screen shows this one grade, so the same future reads the same in Predicción and
+    in both Stress Lab curves. Structural is always CRITICO: a reassuring badge on a
+    business whose outflows persistently exceed inflows is the most dangerous thing the
+    product could display.
+    """
+    if gap_type == GapType.STRUCTURAL:
+        return RiskLevel.CRITICO
+    if breach is None:
+        return RiskLevel.BAJO if health_score >= HEALTHY_SCORE else RiskLevel.MEDIO
+    urgent = (breach.date - as_of).days <= URGENT_BREACH_DAYS
+    # Relative to what the business takes in; no inflow at all is never the mild case.
+    severe = expected_inflow <= 0 or breach.shortfall / expected_inflow >= SEVERE_SHORTFALL_SHARE
+    return RiskLevel.ALTO if urgent or severe else RiskLevel.MEDIO
 
 
 class FinancialEngine:
@@ -82,6 +113,10 @@ class FinancialEngine:
             recommendations=recommendations,
             financing_decision=financing_decision,
             diagnostics=diagnostics,
+            risk_level=risk_level(
+                gap_type, breach, snapshot.as_of,
+                sum(point.expected_inflow for point in points), health,
+            ),
         )
 
     def forecast(self, snapshot: BusinessSnapshot) -> ForecastResult:
