@@ -52,13 +52,22 @@ const NAV_SECTIONS = [
 ];
 
 function Nav() {
-  const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('');
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 80);
+    const h = () => {
+      const y = window.scrollY;
+      if (y < 60) setVisible(true);
+      else if (y > lastScrollY.current + 6) setVisible(false);
+      else if (y < lastScrollY.current - 4) setVisible(true);
+      lastScrollY.current = y;
+    };
     window.addEventListener('scroll', h, { passive: true });
     return () => window.removeEventListener('scroll', h);
   }, []);
+
   useEffect(() => {
     const obs: IntersectionObserver[] = [];
     NAV_SECTIONS.forEach(({ id }) => {
@@ -70,39 +79,48 @@ function Nav() {
     });
     return () => obs.forEach(o => o.disconnect());
   }, []);
+
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between gap-4 py-[18px]"
-      style={{ background: 'linear-gradient(#0C120C 60%, rgba(12,18,12,0.86) 88%, rgba(12,18,12,0))' }}>
-      <a
-        href="#top"
-        aria-label="Beel — Inicio"
-        className="flex flex-none items-center rounded-full border border-ash/20 px-5 py-0"
-        style={{ height: 46 }}
-      >
-        <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-7 w-auto" />
-      </a>
-      {scrolled && (
-        <div className="hidden items-center gap-0.5 md:flex"
-          style={{ height: 46, padding: '0 6px', borderRadius: 999, background: 'rgba(109,114,117,0.13)', border: '1px solid rgba(199,214,213,0.10)' }}>
-          {NAV_SECTIONS.map(({ label, id }) => (
-            <a key={id} href={`#${id}`} className="flex items-center whitespace-nowrap rounded-full px-[15px] text-[13px] transition-colors"
-              style={{ height: 34, color: active === id ? '#ECEBF3' : '#6D7275', background: active === id ? 'rgba(199,214,213,0.10)' : 'none' }}>
-              {label}
-            </a>
-          ))}
-        </div>
-      )}
-      <div className="flex flex-none items-center gap-2">
-        {scrolled && (
-          <Link to="/login" className="hidden items-center rounded-full border border-ash/18 px-[18px] text-[13.5px] text-ghost hover:border-ash/45 md:flex" style={{ height: 44 }}>
+    <header
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        transform: visible ? 'translateY(0)' : 'translateY(-110%)',
+        transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+      }}
+    >
+      <div className="mx-auto flex w-full max-w-[1340px] items-center justify-between gap-4 px-[clamp(18px,4vw,52px)] py-3">
+        {/* logo pill */}
+        <a href="#top" aria-label="Beel — Inicio"
+          className="glass flex h-11 flex-none items-center rounded-full px-[16px]">
+          <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-7 w-auto" />
+        </a>
+
+        {/* center nav pill */}
+        <nav aria-label="Secciones" className="hidden flex-1 justify-center md:flex">
+          <div className="glass flex h-11 items-center gap-[3px] rounded-full px-[6px]">
+            {NAV_SECTIONS.map(({ label, id }) => (
+              <a key={id} href={`#${id}`}
+                className="flex items-center whitespace-nowrap rounded-full px-[15px] text-[13px] transition-colors duration-150"
+                style={{ height: 34, color: active === id ? '#ECEBF3' : '#6D7275', background: active === id ? 'rgba(199,214,213,0.14)' : 'none' }}>
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        {/* right actions */}
+        <div className="flex flex-none items-center gap-2">
+          <Link to="/login"
+            className="glass hidden h-11 items-center rounded-full px-[18px] text-[13.5px] text-ghost md:flex">
             Entrar
           </Link>
-        )}
-        <Link to="/login" className="flex items-center whitespace-nowrap rounded-full bg-ember px-5 text-[13.5px] font-medium text-ghost hover:bg-[#D9111F]" style={{ height: 44 }}>
-          Subir CFDI
-        </Link>
+          <Link to="/login"
+            className="flex h-11 items-center whitespace-nowrap rounded-full bg-ember px-5 text-[13.5px] font-medium text-ghost hover:bg-[#D9111F]">
+            Subir CFDI
+          </Link>
+        </div>
       </div>
-    </nav>
+    </header>
   );
 }
 
@@ -177,10 +195,10 @@ function HeroChart() {
 
 function Hero() {
   return (
-    <section id="top" style={{ position: 'relative', padding: 'clamp(34px,6vw,84px) 0 0', textAlign: 'center' }}>
+    <section id="top" style={{ position: 'relative', padding: 'clamp(80px,10vw,120px) 0 0', textAlign: 'center' }}>
       <Reveal>
-        <div className="inline-flex items-center gap-[10px]"
-          style={{ height: 32, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(199,214,213,0.16)', background: 'rgba(109,114,117,0.13)' }}>
+        <div className="glass inline-flex items-center gap-[10px]"
+          style={{ height: 32, padding: '0 14px', borderRadius: 999 }}>
           <span className="size-[7px] rounded-full bg-ember" style={{ animation: 'pnt-blip 2.4s ease-in-out infinite' }} />
           <span className="font-mono text-[10.5px] uppercase tracking-[.12em] text-dim">Working capital intelligence · México</span>
         </div>
@@ -263,8 +281,8 @@ function Hero() {
               <div className="flex items-center">
                 <img src="/brand/beel-logo-v2.png" alt="Beel" className="h-5 w-auto" />
               </div>
-              <div className="hidden items-center gap-0.5 overflow-hidden sm:flex"
-                style={{ height: 36, padding: '0 5px', borderRadius: 999, background: 'rgba(109,114,117,0.14)', border: '1px solid rgba(199,214,213,0.10)' }}>
+              <div className="glass hidden items-center gap-0.5 overflow-hidden sm:flex"
+                style={{ height: 36, padding: '0 5px', borderRadius: 999 }}>
                 {['Inicio', 'Predicción', 'Stress Lab', 'Recovery'].map((t, i) => (
                   <span key={t} className="flex items-center whitespace-nowrap rounded-full px-[14px] text-[11.5px]"
                     style={{ height: 26, background: i === 0 ? '#C20114' : 'none', color: i === 0 ? '#ECEBF3' : '#6D7275' }}>
@@ -273,9 +291,8 @@ function Hero() {
                 ))}
               </div>
               <div className="flex items-center gap-[6px]">
-                <span className="size-8 rounded-full border border-ash/18" />
-                <span className="flex size-8 items-center justify-center rounded-full text-[11px] font-semibold"
-                  style={{ background: 'rgba(109,114,117,0.30)', border: '1px solid rgba(199,214,213,0.18)' }}>MV</span>
+                <span className="glass size-8 rounded-full" />
+                <span className="glass flex size-8 items-center justify-center rounded-full text-[11px] font-semibold">MV</span>
               </div>
             </div>
             {/* KPI row */}
@@ -449,6 +466,213 @@ function ComoFunciona() {
   );
 }
 
+// ─── Product mockup screens ───────────────────────────────────────────────────
+
+function MockupPrediccion() {
+  const obsRef = useRef<HTMLDivElement>(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const el = obsRef.current; if (!el) return;
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); o.disconnect(); } }, { threshold: 0.1 });
+    o.observe(el); return () => o.disconnect();
+  }, []);
+  return (
+    <div ref={obsRef} className="pnt-lift rounded-[26px] overflow-hidden"
+      style={{ background: '#060906', border: '1px solid rgba(199,214,213,0.12)', padding: 'clamp(16px,2vw,22px)' }}>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <div className="font-mono text-[9.5px] uppercase tracking-[.12em] text-dim mb-1.5">Predicción a 30 días</div>
+          <div className="flex items-baseline gap-2">
+            <span className="num text-[26px] leading-none tracking-[-.03em]" style={{ color: '#EF4444' }}>−$25,300</span>
+            <span className="text-[11px] text-dim">mínimo pesimista · 15 sep</span>
+          </div>
+        </div>
+        <span className="flex-none rounded-full px-3 py-[5px] font-mono text-[9px] uppercase tracking-[.1em]"
+          style={{ background: 'rgba(194,1,20,0.13)', border: '1px solid rgba(194,1,20,0.38)', color: '#E53040' }}>CRÍTICO</span>
+      </div>
+      <div className="flex items-center gap-4 mb-3 font-mono text-[9px] uppercase tracking-[.1em] text-dim">
+        <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-[2px] rounded" style={{ background: '#C20114' }} />Esperado</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-3" style={{ borderTop: '1.5px dashed #EF4444' }} />P20</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-3" style={{ borderTop: '1px dashed rgba(199,214,213,0.5)' }} />Nómina</span>
+      </div>
+      <div className="relative">
+        <svg viewBox="0 0 520 180" width="100%" style={{ display: 'block' }}>
+          {[35, 80, 125].map(y => <line key={y} x1="0" y1={y} x2="520" y2={y} stroke="rgba(199,214,213,0.09)" strokeWidth="1" />)}
+          <line x1="0" y1="148" x2="520" y2="148" stroke="rgba(199,214,213,0.4)" strokeWidth="1" strokeDasharray="4 6" />
+          <polygon points="0,44 65,55 130,72 195,98 260,138 325,112 390,76 455,50 520,38 520,100 455,112 390,130 325,160 260,170 195,148 130,122 65,98 0,80"
+            fill="rgba(239,68,68,0.12)" style={{ opacity: vis ? 1 : 0, transition: 'opacity 0.8s ease 400ms' }} />
+          <polyline points="0,80 65,98 130,122 195,148 260,170 325,160 390,130 455,112 520,100"
+            fill="none" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="5 5"
+            style={{ opacity: vis ? 1 : 0, transition: 'opacity 0.7s ease 600ms' }} />
+          <DrawPolyline points="0,44 65,55 130,72 195,98 260,138 325,112 390,76 455,50 520,38"
+            fill="none" stroke="#C20114" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" delay={200} />
+          <circle cx="260" cy="138" r="5" fill="#EF4444" style={{ opacity: vis ? 1 : 0, transition: 'opacity 0.5s ease 1200ms' }} />
+          {(['HOY','DÍA 8','DÍA 15','DÍA 22','DÍA 30'] as const).map((l, i) => (
+            <text key={l} x={[2,130,252,388,492][i]} y="174" fill={l==='DÍA 15'?'#C20114':'#6D7275'} fontFamily="'IBM Plex Mono',monospace" fontSize="8" letterSpacing="1">{l}</text>
+          ))}
+        </svg>
+        <div className="pointer-events-none absolute" style={{ left: '50%', top: '28%', transform: 'translateX(-55%)', opacity: vis ? 1 : 0, transition: 'opacity 0.5s ease 1400ms' }}>
+          <div className="whitespace-nowrap rounded-2xl text-center" style={{ background: '#060906', border: '1px solid rgba(239,68,68,0.45)', padding: '7px 12px', boxShadow: '0 12px 32px rgba(0,0,0,0.7)' }}>
+            <div className="font-mono text-[8.5px] uppercase tracking-[.1em] text-dim">Mínimo proyectado</div>
+            <div className="mt-0.5 num text-[13px]" style={{ color: '#EF4444' }}>−$25,300 · 15 sep</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupBreach() {
+  const ROWS = [
+    { date: 'Sep 11', label: 'Ferretería López · A-4471', amount: '+$62,000', color: '#22C55E', type: 'PPD', hi: false },
+    { date: 'Sep 13', label: 'Distribuidora Río · B-0821', amount: '+$38,400', color: '#22C55E', type: 'PPD', hi: false },
+    { date: 'Sep 15', label: 'Nómina Q2 · 14 empleados', amount: '−$180,000', color: '#EF4444', type: 'BREACH', hi: true },
+    { date: 'Sep 17', label: 'Proveedor Eléctrico MX', amount: '−$38,400', color: '#6D7275', type: 'RÍGIDO', hi: false },
+  ];
+  return (
+    <div className="pnt-lift rounded-[26px] overflow-hidden"
+      style={{ background: '#060906', border: '1px solid rgba(199,214,213,0.12)', padding: 'clamp(16px,2vw,22px)' }}>
+      <div className="rounded-2xl p-3 mb-4" style={{ background: 'rgba(194,1,20,0.12)', border: '1px solid rgba(194,1,20,0.32)' }}>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="size-[7px] rounded-full bg-ember" style={{ animation: 'pnt-blip 2s ease-in-out infinite' }} />
+          <span className="font-mono text-[9px] uppercase tracking-[.12em] text-dim">Breach Alert · Día 11</span>
+          <span className="ml-auto rounded-full px-2 py-[2px] font-mono text-[8.5px] uppercase tracking-[.1em]"
+            style={{ background: 'rgba(194,1,20,0.25)', color: '#E53040' }}>CRÍTICO</span>
+        </div>
+        <div className="text-[13px] leading-snug">El 15 te faltan <span className="num font-semibold" style={{ color: '#EF4444' }}>$25,300</span> para la nómina.</div>
+      </div>
+      <div className="grid gap-[2px] font-mono text-[9px] uppercase tracking-[.1em] text-dim px-1 pb-2"
+        style={{ gridTemplateColumns: '52px 1fr auto 48px' }}>
+        <span>Fecha</span><span>Concepto</span><span>Monto</span><span className="text-right">Tipo</span>
+      </div>
+      {ROWS.map((r, i) => (
+        <div key={i} className="grid items-center gap-1 px-2 py-[8px] rounded-xl mb-[3px]"
+          style={{ gridTemplateColumns: '52px 1fr auto 48px', background: r.hi ? 'rgba(194,1,20,0.10)' : 'none', border: r.hi ? '1px solid rgba(194,1,20,0.28)' : '1px solid transparent' }}>
+          <span className="font-mono text-[9.5px]" style={{ color: r.hi ? '#C20114' : '#6D7275' }}>{r.date}</span>
+          <span className="text-[11.5px] truncate" style={{ color: r.hi ? '#ECEBF3' : '#C7D6D5' }}>{r.label}</span>
+          <span className="num text-[11.5px]" style={{ color: r.color }}>{r.amount}</span>
+          <span className="text-right font-mono text-[8.5px]" style={{ color: r.hi ? '#EF4444' : '#6D7275' }}>{r.type}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MockupRecovery() {
+  const [rungs, setRungs] = useState([true, false, false]);
+  const shortfall = 25300;
+  const rungData = [
+    { n: '1', title: 'Adelantar cobranza', sub: 'A-4471 · Ferretería López · 4d antes', closes: 25300, pct: 100 },
+    { n: '2', title: 'Diferir pagos a proveedor', sub: 'Proveedor Eléctrico · sin penalización', closes: 12000, pct: 47 },
+    { n: '3', title: 'Usar buffer de caja', sub: 'Reserva de operación disponible', closes: 8000, pct: 32 },
+  ];
+  const gapClosed = rungs[0];
+  return (
+    <div className="pnt-lift rounded-[26px] overflow-hidden"
+      style={{ background: '#060906', border: '1px solid rgba(199,214,213,0.12)', padding: 'clamp(16px,2vw,22px)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="font-mono text-[9px] uppercase tracking-[.1em] text-dim mb-1">Recovery Path</div>
+          <div className="text-[13.5px] font-medium">Cierra la brecha sin deuda</div>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border border-ember/45 px-3 py-[5px]" style={{ background: 'rgba(194,1,20,0.13)' }}>
+          <span className="font-mono text-[9px] text-dim">Faltante</span>
+          <span className="num text-[12px]" style={{ color: '#EF4444' }}>$25,300</span>
+        </div>
+      </div>
+      {rungData.map((rung, i) => {
+        const active = rungs[i];
+        return (
+          <div key={rung.n} className="mb-2 rounded-2xl p-3"
+            style={{ background: 'rgba(109,114,117,0.10)', border: '1px solid rgba(199,214,213,0.08)' }}>
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="flex size-[22px] flex-none items-center justify-center rounded-full font-mono text-[10px] font-medium"
+                style={{ background: active ? 'rgba(34,197,94,0.18)' : 'rgba(109,114,117,0.22)', color: active ? '#22C55E' : '#6D7275' }}>
+                {rung.n}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-medium truncate" style={{ color: active ? '#ECEBF3' : '#6D7275' }}>{rung.title}</div>
+                <div className="text-[10px] text-dim truncate">{rung.sub}</div>
+              </div>
+              <button type="button" onClick={() => setRungs(r => r.map((v, j) => j === i ? !v : v))}
+                className="relative h-[18px] w-8 flex-none rounded-full transition-colors"
+                style={{ background: active ? '#22C55E' : 'rgba(199,214,213,0.18)' }}>
+                <span className="absolute top-[2px] h-[14px] w-[14px] rounded-full bg-ghost shadow transition-all"
+                  style={{ left: active ? 14 : 2 }} />
+              </button>
+            </div>
+            {active && (
+              <div>
+                <div className="flex justify-between font-mono text-[9.5px] text-dim mb-1">
+                  <span>Cierra {Math.round(shortfall > 0 ? (rung.closes / shortfall) * 100 : 0)}% de la brecha</span>
+                  <span className="num" style={{ color: '#22C55E' }}>−${rung.closes.toLocaleString()}</span>
+                </div>
+                <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(199,214,213,0.10)' }}>
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${rung.pct}%`, background: '#22C55E' }} />
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div className="mt-3 flex items-center justify-between rounded-2xl px-3 py-2.5"
+        style={{ background: gapClosed ? 'rgba(34,197,94,0.10)' : 'rgba(194,1,20,0.10)', border: `1px solid ${gapClosed ? 'rgba(34,197,94,0.28)' : 'rgba(194,1,20,0.28)'}` }}>
+        <span className="text-[12px]" style={{ color: gapClosed ? '#22C55E' : '#EF4444' }}>
+          {gapClosed ? '✓ Brecha cerrada · sin crédito' : 'Brecha parcialmente abierta'}
+        </span>
+        <span className="num text-[14px] font-semibold" style={{ color: gapClosed ? '#22C55E' : '#EF4444' }}>$0</span>
+      </div>
+    </div>
+  );
+}
+
+function MockupRefusal() {
+  const [vis, setVis] = useState(false);
+  const obsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = obsRef.current; if (!el) return;
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); o.disconnect(); } }, { threshold: 0.1 });
+    o.observe(el); return () => o.disconnect();
+  }, []);
+  return (
+    <div ref={obsRef} className="pnt-lift rounded-[26px] overflow-hidden"
+      style={{ background: '#060906', border: '1px solid rgba(199,214,213,0.12)', padding: 'clamp(16px,2vw,22px)' }}>
+      <div className="rounded-2xl p-3 mb-3" style={{ background: 'rgba(194,1,20,0.08)', border: '1px solid rgba(194,1,20,0.28)' }}>
+        <div className="font-mono text-[9px] uppercase tracking-[.12em] mb-1.5" style={{ color: '#E53040' }}>Déficit estructural detectado</div>
+        <div className="text-[12.5px] text-ash leading-snug">Las salidas superan las entradas <span className="num text-ghost">$45,200</span>/mes</div>
+      </div>
+      <div className="rounded-2xl p-3 mb-3 flex items-center gap-3"
+        style={{ background: 'rgba(109,114,117,0.10)', border: '1px solid rgba(199,214,213,0.10)' }}>
+        <span className="flex size-8 flex-none items-center justify-center rounded-full text-base" style={{ background: 'rgba(109,114,117,0.25)' }}>🔒</span>
+        <div>
+          <div className="text-[12.5px] font-medium">Ofertas de crédito ocultas</div>
+          <div className="text-[10.5px] text-dim">Pedir crédito empeora el horizonte</div>
+        </div>
+      </div>
+      <div className="mb-3">
+        <div className="font-mono text-[9px] uppercase tracking-[.1em] text-dim mb-2">Simulación · crédito a 45% APR · 6 meses</div>
+        <svg viewBox="0 0 480 120" width="100%" style={{ display: 'block' }}>
+          {[25, 60, 95].map(y => <line key={y} x1="0" y1={y} x2="480" y2={y} stroke="rgba(199,214,213,0.08)" strokeWidth="1" />)}
+          <line x1="0" y1="92" x2="480" y2="92" stroke="rgba(199,214,213,0.35)" strokeWidth="1" strokeDasharray="4 5" />
+          <polygon points="0,25 80,36 160,54 240,76 320,96 400,112 480,120 480,120 400,120 320,120 240,120 160,120 80,120 0,120"
+            fill="rgba(239,68,68,0.10)" style={{ opacity: vis ? 1 : 0, transition: 'opacity 0.8s ease 300ms' }} />
+          <DrawPolyline points="0,25 80,36 160,54 240,76 320,96 400,112 480,120"
+            fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" delay={200} />
+          <text x="290" y="86" fill="#EF4444" fontFamily="'IBM Plex Mono',monospace" fontSize="8" letterSpacing="0.8">INSOLVENCIA MES 4</text>
+          {['MES 1','MES 2','MES 3','MES 4','MES 5','MES 6'].map((l, i) => (
+            <text key={l} x={[2,96,192,285,372,456][i]} y="116" fill="#6D7275" fontFamily="'IBM Plex Mono',monospace" fontSize="7" letterSpacing="0.8">{l}</text>
+          ))}
+        </svg>
+      </div>
+      <div className="text-[11.5px] text-dim leading-[1.5]">
+        Tomar <span className="num text-ghost">$50,000</span> hoy lleva a insolvencia en mes 4. Primero reestructura costos.
+      </div>
+    </div>
+  );
+}
+
+const PRODUCT_MOCKUPS = [MockupPrediccion, MockupBreach, MockupRecovery, MockupRefusal];
+
 // ─── 03 Producto ──────────────────────────────────────────────────────────────
 
 const FEATURES = [
@@ -468,7 +692,9 @@ function Producto() {
         </h2>
       </Reveal>
       <div className="mt-[clamp(28px,4vw,52px)] flex flex-col gap-[clamp(28px,4vw,54px)]">
-        {FEATURES.map(f => (
+        {FEATURES.map((f, fi) => {
+          const Mockup = PRODUCT_MOCKUPS[fi];
+          return (
           <div key={f.num} className="grid items-center gap-[clamp(16px,2.4vw,30px)]" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))' }}>
             <Reveal dir={f.imgRight ? 'left' : 'right'}>
               <div className={f.imgRight ? '' : 'lg:order-last'}>
@@ -484,34 +710,14 @@ function Producto() {
                     {f.tags.map(t => <span key={t} className="flex items-center rounded-full border border-ash/16 px-[13px]" style={{ height: 30 }}>{t}</span>)}
                   </div>
                 )}
-                {'ladder' in f && f.ladder && (
-                  <div className="mt-[22px] flex max-w-[470px] flex-col gap-2">
-                    {[
-                      { n: '01', label: 'Adelantar cobro', cost: 'costo $0', active: true },
-                      { n: '02', label: 'Diferir pago a proveedor', cost: 'sin penalización', active: false },
-                      { n: '03', label: 'Línea pre-calificada', cost: 'por costo efectivo', active: false },
-                    ].map(row => (
-                      <div key={row.n} className="flex items-center gap-3 rounded-full px-4"
-                        style={{ height: 46, background: 'rgba(109,114,117,0.13)', border: '1px solid rgba(199,214,213,0.10)' }}>
-                        <span className="font-mono text-[10px] tracking-[.12em]" style={{ color: row.active ? '#C20114' : '#6D7275' }}>{row.n}</span>
-                        <span className="text-[13.5px]">{row.label}</span>
-                        <span className="ml-auto font-mono text-[10px] uppercase tracking-[.12em] text-dim">{row.cost}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </Reveal>
             <Reveal dir={f.imgRight ? 'right' : 'left'} delay={100}>
-              <div className="pnt-lift rounded-[26px]" style={{ border: '1px solid rgba(199,214,213,0.10)', background: `repeating-linear-gradient(115deg, rgba(199,214,213,0.16) 0 1.5px, rgba(199,214,213,0) 1.5px 10px), ${f.dark ? '#060906' : 'rgba(109,114,117,0.13)'}`, minHeight: 'clamp(230px,24vw,330px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center' as const }}>
-                <div>
-                  <div className="font-mono text-[11px] uppercase tracking-[.12em] text-ash">captura — {f.screenshotLabel}</div>
-                  <div className="mt-2 font-mono text-[10.5px] uppercase tracking-[.12em] text-dim">{f.screenshotSub}</div>
-                </div>
-              </div>
+              <Mockup />
             </Reveal>
           </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -876,12 +1082,14 @@ export default function Landing() {
   return (
     <div className="min-h-screen" style={{ background: '#0C120C', color: '#ECEBF3', overflowX: 'hidden' }}>
       <LandingAnimations />
-      {/* scroll progress bar */}
+      {/* scroll progress bar — sits above the nav */}
       <div className="fixed left-0 right-0 top-0 z-[60]" style={{ height: 2, background: 'rgba(199,214,213,0.10)' }}>
         <div style={{ height: '100%', width: `${progress}%`, background: '#C20114', transition: 'width 0.1s linear' }} />
       </div>
+      {/* fixed top bar */}
+      <Nav />
+      {/* page content */}
       <div className="mx-auto w-full max-w-[1340px] box-border px-[clamp(18px,4vw,52px)]">
-        <Nav />
         <Hero />
         <Ticker />
         <StatBand />
